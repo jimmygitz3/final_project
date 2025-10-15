@@ -13,7 +13,13 @@ import {
   MenuItem,
   Chip,
   Grid,
-  Autocomplete
+  Autocomplete,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Card,
+  CardContent
 } from '@mui/material';
 import { Add, Delete, LocationOn, School } from '@mui/icons-material';
 import { kenyanCounties, getTownsForCounty, kenyanUniversities } from '../data/kenyanLocations';
@@ -40,6 +46,9 @@ const CreateListing = () => {
   const [images, setImages] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
+  const [createdListing, setCreatedListing] = useState(null);
+  const [paymentLoading, setPaymentLoading] = useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -86,6 +95,43 @@ const CreateListing = () => {
     });
   };
 
+  const handlePayment = async () => {
+    // Check if already paid
+    if (createdListing?.paymentStatus === 'paid') {
+      alert('This listing has already been paid for and is active!');
+      navigate('/dashboard');
+      return;
+    }
+
+    setPaymentLoading(true);
+    try {
+      const response = await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
+        amount: 500,
+        phoneNumber: user.phone,
+        paymentType: 'listing_fee',
+        listingId: createdListing._id,
+        description: `Listing activation fee for ${createdListing.title}`
+      });
+
+      // Mock successful payment
+      setTimeout(async () => {
+        await axios.post('http://localhost:5000/api/payments/mpesa/callback', {
+          transactionId: response.data.transactionId || `TXN${Date.now()}`,
+          receiptNumber: `MP${Date.now()}`,
+          status: 'completed'
+        });
+        
+        alert('Payment successful! Your listing is now active.');
+        navigate('/dashboard');
+      }, 2000);
+
+    } catch (error) {
+      setError('Payment failed: ' + (error.response?.data?.message || 'Unknown error'));
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
@@ -108,14 +154,14 @@ const CreateListing = () => {
         formDataToSend.append('images', image);
       });
 
-      await axios.post('http://localhost:5000/api/listings', formDataToSend, {
+      const response = await axios.post('http://localhost:5000/api/listings', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
       });
 
-      alert('Listing created successfully! Please pay to activate it.');
-      navigate('/dashboard');
+      setCreatedListing(response.data.listing);
+      setShowPayment(true);
     } catch (error) {
       setError(error.response?.data?.message || 'Failed to create listing');
     } finally {
@@ -380,6 +426,84 @@ const CreateListing = () => {
           </Box>
         </Paper>
       </Box>
+
+      {/* Payment Dialog */}
+      <Dialog open={showPayment} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            Activate Your Listing
+          </Typography>
+        </DialogTitle>
+        <DialogContent>
+          {createdListing && (
+            <Box>
+              <Alert severity="success" sx={{ mb: 3 }}>
+                Listing created successfully! Pay KES 500 to make it visible to tenants.
+              </Alert>
+              
+              <Card sx={{ mb: 3, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+                <CardContent>
+                  <Typography variant="h6" gutterBottom>
+                    {createdListing.title}
+                  </Typography>
+                  <Typography variant="body2">
+                    {createdListing.location?.town}, {createdListing.location?.county}
+                  </Typography>
+                  <Typography variant="h5" sx={{ mt: 1, fontWeight: 600 }}>
+                    KES {createdListing.price?.toLocaleString()}/month
+                  </Typography>
+                </CardContent>
+              </Card>
+
+              <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 2, mb: 3 }}>
+                <Typography variant="h6" gutterBottom>
+                  Activation Fee: KES 500
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • Your listing will be active for 30 days
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • Visible to all tenants searching in your area
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  • Includes priority placement in search results
+                </Typography>
+              </Box>
+
+              {error && (
+                <Alert severity="error" sx={{ mb: 2 }}>
+                  {error}
+                </Alert>
+              )}
+
+              <Box sx={{ bgcolor: 'info.light', p: 2, borderRadius: 2 }}>
+                <Typography variant="body2">
+                  💡 This is a demo payment. In production, you would receive an M-Pesa prompt.
+                </Typography>
+              </Box>
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={() => {
+              setShowPayment(false);
+              navigate('/dashboard');
+            }}
+            disabled={paymentLoading}
+          >
+            Skip Payment
+          </Button>
+          <Button 
+            variant="contained" 
+            onClick={handlePayment}
+            disabled={paymentLoading}
+            sx={{ px: 4 }}
+          >
+            {paymentLoading ? 'Processing...' : 'Pay KES 500'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Container>
   );
 };

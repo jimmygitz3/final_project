@@ -108,9 +108,15 @@ const Dashboard = () => {
 
 
 
-  const handlePayment = async (listingId, amount, description) => {
+  const handlePayment = async (listingId, amount, description, currentPaymentStatus) => {
+    // Check if already paid
+    if (currentPaymentStatus === 'paid') {
+      alert('This listing has already been paid for and is active!');
+      return;
+    }
+
     try {
-      await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
+      const response = await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
         amount,
         phoneNumber: user.phone,
         paymentType: 'listing_fee',
@@ -118,8 +124,18 @@ const Dashboard = () => {
         description
       });
       
-      alert('Payment initiated! Please complete on your phone.');
-      fetchData(); // Refresh data
+      // Mock successful payment
+      setTimeout(async () => {
+        await axios.post('http://localhost:5000/api/payments/mpesa/callback', {
+          transactionId: response.data.transactionId,
+          receiptNumber: `MP${Date.now()}`,
+          status: 'completed'
+        });
+        
+        alert('Payment successful! Your listing is now active.');
+        fetchData(); // Refresh data
+      }, 2000);
+
     } catch (error) {
       alert('Payment failed: ' + error.response?.data?.message);
     }
@@ -153,12 +169,9 @@ const Dashboard = () => {
         </Box>
       </Paper>
       
-      {user.userType === 'landlord' && user.subscriptionStatus !== 'active' && (
-        <Alert severity="warning" sx={{ mb: 3 }} icon={<Notifications />}>
-          Your subscription is inactive. Upgrade to unlock all features and boost your listings!
-          <Button variant="outlined" size="small" sx={{ ml: 2 }}>
-            Upgrade Now
-          </Button>
+      {user.userType === 'landlord' && (
+        <Alert severity="info" sx={{ mb: 3 }} icon={<Notifications />}>
+          Pay KES 500 per listing to activate and make it visible to tenants. Each listing is active for 30 days.
         </Alert>
       )}
 
@@ -264,9 +277,10 @@ const Dashboard = () => {
                       fullWidth
                       variant="outlined"
                       startIcon={<TrendingUp />}
+                      onClick={() => setTabValue(3)}
                       sx={{ py: 2 }}
                     >
-                      Analytics
+                      Activity
                     </Button>
                   </Grid>
                 </>
@@ -386,7 +400,7 @@ const Dashboard = () => {
                     
                     <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                       <Chip 
-                        label={listing.paymentStatus} 
+                        label={listing.paymentStatus === 'paid' ? 'Paid' : 'Payment Pending'} 
                         color={listing.paymentStatus === 'paid' ? 'success' : 'warning'}
                         size="small"
                       />
@@ -406,16 +420,25 @@ const Dashboard = () => {
                       </Typography>
                     </Box>
 
-                    {listing.paymentStatus !== 'paid' && (
+                    {listing.paymentStatus !== 'paid' ? (
                       <Button
                         variant="contained"
                         startIcon={<Payment />}
-                        onClick={() => handlePayment(listing._id, 500, `Listing fee for ${listing.title}`)}
+                        onClick={() => handlePayment(listing._id, 500, `Listing fee for ${listing.title}`, listing.paymentStatus)}
                         fullWidth
                         sx={{ mt: 2 }}
                       >
                         Pay KES 500 to Activate
                       </Button>
+                    ) : (
+                      <Box sx={{ mt: 2, p: 2, bgcolor: 'success.light', borderRadius: 2 }}>
+                        <Typography variant="body2" color="success.dark" sx={{ textAlign: 'center', fontWeight: 600 }}>
+                          ✅ Listing Active - Payment Complete
+                        </Typography>
+                        <Typography variant="caption" color="success.dark" sx={{ textAlign: 'center', display: 'block' }}>
+                          Expires: {listing.paymentExpiry ? new Date(listing.paymentExpiry).toLocaleDateString() : 'N/A'}
+                        </Typography>
+                      </Box>
                     )}
                   </CardContent>
                 </Card>
@@ -501,6 +524,8 @@ const Dashboard = () => {
           </Paper>
         </Box>
       )}
+
+
     </Container>
   );
 };

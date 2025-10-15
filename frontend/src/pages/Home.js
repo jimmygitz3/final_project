@@ -4,12 +4,12 @@ import {
   Typography,
   Grid,
   Box,
-  Paper,
   Chip,
   Skeleton,
   Fade,
   Card,
-  CardContent
+  CardContent,
+  Button
 } from '@mui/material';
 import { 
   TrendingUp
@@ -151,96 +151,156 @@ const Home = () => {
   }, []);
 
   return (
-    <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
+    <Box sx={{ backgroundColor: 'background.default', minHeight: '100vh' }}>
       {/* Hero Section */}
-      <Fade in timeout={1000}>
-        <Box sx={{ textAlign: 'center', mb: 6 }}>
-          <Typography variant="h2" component="h1" gutterBottom sx={{ 
-            fontWeight: 'bold',
-            background: 'linear-gradient(45deg, #2E7D32 30%, #FF6F00 90%)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
-            Find Your Perfect Student Home
-          </Typography>
-          
-          <Typography variant="h5" color="text.secondary" sx={{ mb: 3 }}>
-            🏠 Discover affordable housing near universities across Kenya 🎓
-          </Typography>
+      <Box 
+        sx={{ 
+          background: 'linear-gradient(135deg, #0066CC 0%, #3385D6 50%, #FF6B35 100%)',
+          color: 'white',
+          py: 8,
+          mb: 0
+        }}
+      >
+        <Container maxWidth="lg">
+          <Fade in timeout={1000}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography 
+                variant="h1" 
+                component="h1" 
+                gutterBottom 
+                sx={{ 
+                  fontWeight: 700,
+                  mb: 2,
+                  textShadow: '0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                Find Your Perfect Student Home
+              </Typography>
+              
+              <Typography 
+                variant="h5" 
+                sx={{ 
+                  mb: 4,
+                  opacity: 0.95,
+                  fontWeight: 400,
+                  maxWidth: 600,
+                  mx: 'auto'
+                }}
+              >
+                Discover thousands of student-friendly apartments and houses near universities across Kenya
+              </Typography>
 
-          {/* Quick Stats */}
-          <Grid container spacing={2} sx={{ mb: 4, justifyContent: 'center' }}>
-            <Grid item>
-              <Paper sx={{ p: 3, textAlign: 'center', minWidth: 140, borderRadius: 3 }}>
-                <Typography variant="h4" color="primary" sx={{ fontWeight: 600 }}>
-                  {stats.totalProperties}
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>Properties</Typography>
-              </Paper>
-            </Grid>
-            <Grid item>
-              <Paper sx={{ p: 3, textAlign: 'center', minWidth: 140, borderRadius: 3 }}>
-                <Typography variant="h4" color="primary" sx={{ fontWeight: 600 }}>
-                  {stats.totalUniversities}+
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>Universities</Typography>
-              </Paper>
-            </Grid>
-            <Grid item>
-              <Paper sx={{ p: 3, textAlign: 'center', minWidth: 140, borderRadius: 3 }}>
-                <Typography variant="h4" color="primary" sx={{ fontWeight: 600 }}>
-                  {stats.happyStudents}
-                </Typography>
-                <Typography variant="body2" sx={{ fontWeight: 500 }}>
-                  {stats.happyStudents === 1 ? 'Happy Student' : 'Happy Students'}
-                </Typography>
-              </Paper>
-            </Grid>
-          </Grid>
-
-          {/* Popular Universities */}
-          <Box sx={{ mb: 4 }}>
-            <Typography variant="h6" gutterBottom>Popular Universities</Typography>
-            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
-              {popularUniversities.map((uni) => (
-                <Chip
-                  key={uni}
-                  label={uni}
-                  onClick={() => handleFilterChange('university', uni)}
-                  variant={filters.university === uni ? 'filled' : 'outlined'}
-                  color="primary"
-                  sx={{ cursor: 'pointer' }}
+              {/* Search Filters - Inline Hero Search */}
+              <Box 
+                sx={{ 
+                  py: 4, 
+                  px: 3,
+                  maxWidth: 850, 
+                  mx: 'auto',
+                  mt: 4,
+                  width: '80%'
+                }}
+              >
+                <SearchFilters
+                  filters={filters}
+                  onFilterChange={handleFilterChange}
+                  onSearch={handleSearch}
+                  onClearFilters={handleClearFilters}
+                  compact={true}
                 />
-              ))}
+              </Box>
             </Box>
+          </Fade>
+        </Container>
+      </Box>
+
+      <Container maxWidth="lg" sx={{ py: 6 }}>
+
+        {/* Quick Stats */}
+        <Grid container spacing={4} sx={{ mb: 6 }}>
+          <Grid item xs={12} md={4}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" color="primary" sx={{ fontWeight: 700, mb: 1 }}>
+                {stats.totalProperties}+
+              </Typography>
+              <Typography variant="h6" color="text.secondary">
+                Student Properties
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" color="primary" sx={{ fontWeight: 700, mb: 1 }}>
+                {stats.totalUniversities}+
+              </Typography>
+              <Typography variant="h6" color="text.secondary">
+                Universities Covered
+              </Typography>
+            </Box>
+          </Grid>
+          <Grid item xs={12} md={4}>
+            <Box sx={{ textAlign: 'center' }}>
+              <Typography variant="h3" color="primary" sx={{ fontWeight: 700, mb: 1 }}>
+                {stats.happyStudents}
+              </Typography>
+              <Typography variant="h6" color="text.secondary">
+                {stats.happyStudents === 1 ? 'Happy Student' : 'Happy Students'}
+              </Typography>
+            </Box>
+          </Grid>
+        </Grid>
+
+        {/* Popular Universities */}
+        <Box sx={{ mb: 6 }}>
+          <Typography variant="h5" gutterBottom sx={{ fontWeight: 600, mb: 3 }}>
+            Popular University Areas
+          </Typography>
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 2 }}>
+            {popularUniversities.map((uni) => (
+              <Chip
+                key={uni}
+                label={uni}
+                onClick={() => handleFilterChange('university', uni)}
+                variant={filters.university === uni ? 'filled' : 'outlined'}
+                color="primary"
+                size="medium"
+                sx={{ 
+                  cursor: 'pointer',
+                  py: 2,
+                  px: 1,
+                  fontSize: '0.9rem',
+                  '&:hover': {
+                    backgroundColor: filters.university === uni ? 'primary.dark' : 'primary.light',
+                    color: 'white'
+                  }
+                }}
+              />
+            ))}
           </Box>
         </Box>
-      </Fade>
 
-      {/* Search Filters */}
-      <SearchFilters
-        filters={filters}
-        onFilterChange={handleFilterChange}
-        onSearch={handleSearch}
-        onClearFilters={handleClearFilters}
-        showAdvanced={true}
-      />
-
-      {/* Results Header */}
-      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h5">
-          {loading ? 'Loading...' : `${listings.length} Properties Found`}
-        </Typography>
-        {listings.length > 0 && (
-          <Chip 
-            icon={<TrendingUp />} 
-            label="Updated Today" 
-            color="success" 
-            variant="outlined" 
-          />
-        )}
-      </Box>
+        {/* Results Header */}
+        <Box sx={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          mb: 4,
+          py: 3,
+          borderBottom: '2px solid #E5E7EB'
+        }}>
+          <Typography variant="h4" sx={{ fontWeight: 600, color: 'text.primary' }}>
+            {loading ? 'Loading Properties...' : `${listings.length} Student Properties Available`}
+          </Typography>
+          {listings.length > 0 && (
+            <Chip 
+              icon={<TrendingUp />} 
+              label="Recently Updated" 
+              color="secondary" 
+              variant="filled"
+              sx={{ px: 2, py: 1 }}
+            />
+          )}
+        </Box>
 
       {/* Listings Grid */}
       <Grid container spacing={3}>
@@ -273,14 +333,31 @@ const Home = () => {
         )}
       </Grid>
 
-      {listings.length === 0 && (
-        <Box sx={{ textAlign: 'center', mt: 4 }}>
-          <Typography variant="h6" color="text.secondary">
-            No listings found. Try adjusting your search filters.
-          </Typography>
-        </Box>
-      )}
-    </Container>
+        {listings.length === 0 && !loading && (
+          <Box sx={{ 
+            textAlign: 'center', 
+            py: 8,
+            backgroundColor: 'background.paper',
+            borderRadius: 3,
+            border: '1px solid #E5E7EB'
+          }}>
+            <Typography variant="h5" color="text.secondary" gutterBottom>
+              No properties found
+            </Typography>
+            <Typography variant="body1" color="text.secondary" sx={{ mb: 3 }}>
+              Try adjusting your search criteria or browse all available properties
+            </Typography>
+            <Button 
+              variant="contained" 
+              onClick={handleClearFilters}
+              sx={{ px: 4, py: 1.5 }}
+            >
+              Clear Filters
+            </Button>
+          </Box>
+        )}
+      </Container>
+    </Box>
   );
 };
 

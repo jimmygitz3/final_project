@@ -5,6 +5,7 @@ import {
   Grid,
   Card,
   CardMedia,
+  CardContent,
   Box,
   Chip,
   Button,
@@ -28,17 +29,32 @@ const ListingDetails = () => {
   const [loading, setLoading] = useState(true);
   const [contactDialog, setContactDialog] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [contactUnlocked, setContactUnlocked] = useState(false);
 
   const fetchListing = React.useCallback(async () => {
     try {
       const response = await axios.get(`http://localhost:5000/api/listings/${id}`);
       setListing(response.data);
+      
+      // Check if user already has access to contact details
+      if (user) {
+        try {
+          const connectionResponse = await axios.get(`http://localhost:5000/api/connections/check/${id}`);
+          if (connectionResponse.data.hasAccess) {
+            setContactUnlocked(true);
+          }
+        } catch (error) {
+          // No existing connection, user needs to pay
+          console.log('No existing connection found');
+        }
+      }
     } catch (error) {
       console.error('Error fetching listing:', error);
     } finally {
       setLoading(false);
     }
-  }, [id]);
+  }, [id, user]);
 
   useEffect(() => {
     fetchListing();
@@ -58,8 +74,9 @@ const ListingDetails = () => {
   };
 
   const handlePayConnectionFee = async () => {
+    setPaymentLoading(true);
     try {
-      await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
+      const response = await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
         amount: 100,
         phoneNumber: phoneNumber || user.phone,
         paymentType: 'connection_fee',
@@ -67,10 +84,25 @@ const ListingDetails = () => {
         description: `Connection fee for ${listing.title}`
       });
       
-      alert('Payment initiated! Please complete on your phone.');
-      setContactDialog(false);
+      // Mock successful payment
+      setTimeout(async () => {
+        await axios.post('http://localhost:5000/api/payments/mpesa/callback', {
+          transactionId: response.data.transactionId,
+          receiptNumber: `MP${Date.now()}`,
+          status: 'completed'
+        });
+        
+        setContactUnlocked(true);
+        setContactDialog(false); // Close the payment dialog
+        setPaymentLoading(false);
+        
+        // Show success message
+        alert('Payment successful! Contact details are now unlocked.');
+      }, 2000);
+
     } catch (error) {
       alert('Payment failed: ' + error.response?.data?.message);
+      setPaymentLoading(false);
     }
   };
 
@@ -177,18 +209,59 @@ const ListingDetails = () => {
               </Typography>
             </Box>
 
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={handleContactLandlord}
-              sx={{ mb: 2 }}
-            >
-              Contact Landlord
-            </Button>
+            {contactUnlocked ? (
+              <Box>
+                <Alert severity="success" sx={{ mb: 2 }}>
+                  Contact details unlocked!
+                </Alert>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Phone:
+                  </Typography>
+                  <Typography variant="h6">
+                    {listing.landlord.phone}
+                  </Typography>
+                </Box>
+                <Box sx={{ mb: 2 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    Email:
+                  </Typography>
+                  <Typography variant="body1">
+                    {listing.landlord.email}
+                  </Typography>
+                </Box>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  href={`tel:${listing.landlord.phone}`}
+                  sx={{ mb: 1 }}
+                >
+                  Call Now
+                </Button>
+                <Button
+                  fullWidth
+                  variant="outlined"
+                  href={`mailto:${listing.landlord.email}`}
+                >
+                  Send Email
+                </Button>
+              </Box>
+            ) : (
+              <Box>
+                <Button
+                  fullWidth
+                  variant="contained"
+                  onClick={handleContactLandlord}
+                  sx={{ mb: 2 }}
+                >
+                  Unlock Contact Details
+                </Button>
 
-            <Typography variant="body2" color="text.secondary">
-              A connection fee of KES 100 is required to access landlord contact details.
-            </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Pay KES 100 to access landlord contact details and connect directly.
+                </Typography>
+              </Box>
+            )}
           </Card>
         </Grid>
       </Grid>
@@ -197,26 +270,73 @@ const ListingDetails = () => {
       <ReviewSection listingId={listing._id} />
 
       {/* Contact Dialog */}
-      <Dialog open={contactDialog} onClose={() => setContactDialog(false)}>
-        <DialogTitle>Contact Landlord</DialogTitle>
-        <DialogContent>
-          <Typography paragraph>
-            To contact the landlord, you need to pay a connection fee of KES 100.
-            This helps maintain the quality of our platform.
+      <Dialog open={contactDialog} onClose={() => setContactDialog(false)} maxWidth="sm" fullWidth>
+        <DialogTitle>
+          <Typography variant="h5" sx={{ fontWeight: 600 }}>
+            Unlock Contact Details
           </Typography>
+        </DialogTitle>
+        <DialogContent>
+          <Alert severity="info" sx={{ mb: 3 }}>
+            Pay KES 100 to unlock landlord contact details and connect directly.
+          </Alert>
+          
+          <Card sx={{ mb: 3, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
+            <CardContent>
+              <Typography variant="h6" gutterBottom>
+                {listing?.title}
+              </Typography>
+              <Typography variant="body2">
+                Landlord: {listing?.landlord.name}
+              </Typography>
+            </CardContent>
+          </Card>
+
           <TextField
             fullWidth
-            label="Phone Number for Payment"
+            label="M-Pesa Phone Number"
             value={phoneNumber}
             onChange={(e) => setPhoneNumber(e.target.value)}
-            placeholder={user?.phone}
-            sx={{ mt: 2 }}
+            placeholder={user?.phone || "254XXXXXXXXX"}
+            sx={{ mb: 3 }}
+            helperText="Enter your M-Pesa registered phone number"
           />
+
+          <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 2, mb: 2 }}>
+            <Typography variant="body2" sx={{ fontWeight: 600, mb: 1 }}>
+              What you'll get:
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Landlord's phone number
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Landlord's email address
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              • Direct contact buttons
+            </Typography>
+          </Box>
+
+          <Box sx={{ bgcolor: 'info.light', p: 2, borderRadius: 2 }}>
+            <Typography variant="body2">
+              💡 This is a demo payment. In production, you would receive an M-Pesa prompt.
+            </Typography>
+          </Box>
         </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setContactDialog(false)}>Cancel</Button>
-          <Button onClick={handlePayConnectionFee} variant="contained">
-            Pay KES 100
+        <DialogActions sx={{ p: 3 }}>
+          <Button 
+            onClick={() => setContactDialog(false)}
+            disabled={paymentLoading}
+          >
+            Cancel
+          </Button>
+          <Button 
+            onClick={handlePayConnectionFee} 
+            variant="contained"
+            disabled={paymentLoading || !phoneNumber}
+            sx={{ px: 4 }}
+          >
+            {paymentLoading ? 'Processing...' : 'Pay KES 100'}
           </Button>
         </DialogActions>
       </Dialog>
