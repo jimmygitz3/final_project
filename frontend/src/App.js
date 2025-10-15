@@ -10,6 +10,7 @@ import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import ListingDetails from './pages/ListingDetails';
 import CreateListing from './pages/CreateListing';
+import Favorites from './pages/Favorites';
 
 const theme = createTheme({
   palette: {
@@ -36,6 +37,7 @@ function App() {
             <Route path="/dashboard" element={<Dashboard />} />
             <Route path="/listing/:id" element={<ListingDetails />} />
             <Route path="/create-listing" element={<CreateListing />} />
+            <Route path="/favorites" element={<Favorites />} />
           </Routes>
         </Router>
       </AuthProvider>

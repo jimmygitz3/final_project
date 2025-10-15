@@ -7,9 +7,11 @@ import {
   Box,
   IconButton,
   Menu,
-  MenuItem
+  MenuItem,
+  Badge,
+  Tooltip
 } from '@mui/material';
-import { Home, AccountCircle } from '@mui/icons-material';
+import { Home, AccountCircle, Favorite, Dashboard } from '@mui/icons-material';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 
@@ -49,15 +51,33 @@ const Navbar = () => {
         </Typography>
 
         {user ? (
-          <Box>
-            <Button color="inherit" onClick={() => navigate('/dashboard')}>
-              Dashboard
-            </Button>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Tooltip title="Dashboard">
+              <IconButton color="inherit" onClick={() => navigate('/dashboard')}>
+                <Dashboard />
+              </IconButton>
+            </Tooltip>
+            
+            {user.userType === 'tenant' && (
+              <Tooltip title="My Favorites">
+                <IconButton color="inherit" onClick={() => navigate('/favorites')}>
+                  <Badge badgeContent={JSON.parse(localStorage.getItem('favorites') || '[]').length} color="error">
+                    <Favorite />
+                  </Badge>
+                </IconButton>
+              </Tooltip>
+            )}
+            
             {user.userType === 'landlord' && (
-              <Button color="inherit" onClick={() => navigate('/create-listing')}>
-                Add Listing
+              <Button 
+                color="inherit" 
+                onClick={() => navigate('/create-listing')}
+                sx={{ textTransform: 'none' }}
+              >
+                + Add Property
               </Button>
             )}
+            
             <IconButton
               size="large"
               onClick={handleMenu}

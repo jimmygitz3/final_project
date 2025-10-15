@@ -12,9 +12,11 @@ import {
   Select,
   MenuItem,
   Chip,
-  Grid
+  Grid,
+  Autocomplete
 } from '@mui/material';
-import { Add, Delete } from '@mui/icons-material';
+import { Add, Delete, LocationOn, School } from '@mui/icons-material';
+import { kenyanCounties, getTownsForCounty, kenyanUniversities } from '../data/kenyanLocations';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -106,7 +108,7 @@ const CreateListing = () => {
         formDataToSend.append('images', image);
       });
 
-      const response = await axios.post('http://localhost:5000/api/listings', formDataToSend, {
+      await axios.post('http://localhost:5000/api/listings', formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -202,24 +204,65 @@ const CreateListing = () => {
               </Grid>
 
               <Grid item xs={12} sm={4}>
-                <TextField
-                  required
-                  fullWidth
-                  name="county"
-                  label="County"
+                <Autocomplete
+                  options={kenyanCounties}
                   value={formData.county}
-                  onChange={handleChange}
+                  onChange={(_, value) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      county: value || '',
+                      town: '' // Clear town when county changes
+                    }));
+                  }}
+                  renderInput={(params) => (
+                    <TextField 
+                      {...params} 
+                      required
+                      label="County"
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />
+                      }}
+                    />
+                  )}
+                  renderOption={(props, option) => (
+                    <Box component="li" {...props}>
+                      <LocationOn sx={{ mr: 2, color: 'action.active' }} />
+                      {option}
+                    </Box>
+                  )}
                 />
               </Grid>
 
               <Grid item xs={12} sm={4}>
-                <TextField
-                  required
-                  fullWidth
-                  name="town"
-                  label="Town"
+                <Autocomplete
+                  options={formData.county ? getTownsForCounty(formData.county) : []}
                   value={formData.town}
-                  onChange={handleChange}
+                  onChange={(_, value) => {
+                    setFormData(prev => ({
+                      ...prev,
+                      town: value || ''
+                    }));
+                  }}
+                  renderInput={(params) => (
+                    <TextField 
+                      {...params} 
+                      required
+                      label={formData.county ? `Town in ${formData.county}` : "Town"}
+                      InputProps={{
+                        ...params.InputProps,
+                        startAdornment: <LocationOn sx={{ mr: 1, color: 'action.active' }} />
+                      }}
+                    />
+                  )}
+                  renderOption={(props, option) => (
+                    <Box component="li" {...props}>
+                      <LocationOn sx={{ mr: 2, color: 'action.active' }} />
+                      {option}
+                    </Box>
+                  )}
+                  disabled={!formData.county}
+                  noOptionsText={!formData.county ? "Select county first" : "No towns found"}
                 />
               </Grid>
 
@@ -266,15 +309,34 @@ const CreateListing = () => {
                   Nearby Universities
                 </Typography>
                 <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                  <TextField
-                    label="University Name"
+                  <Autocomplete
+                    options={kenyanUniversities}
                     value={newUniversity.name}
-                    onChange={(e) => setNewUniversity({...newUniversity, name: e.target.value})}
+                    onChange={(_, value) => setNewUniversity({...newUniversity, name: value || ''})}
+                    renderInput={(params) => (
+                      <TextField 
+                        {...params} 
+                        label="University Name"
+                        InputProps={{
+                          ...params.InputProps,
+                          startAdornment: <School sx={{ mr: 1, color: 'action.active' }} />
+                        }}
+                      />
+                    )}
+                    renderOption={(props, option) => (
+                      <Box component="li" {...props}>
+                        <School sx={{ mr: 2, color: 'action.active' }} />
+                        {option}
+                      </Box>
+                    )}
+                    freeSolo
+                    sx={{ minWidth: 300 }}
                   />
                   <TextField
-                    label="Distance"
+                    label="Distance (e.g., 2km, 15 min walk)"
                     value={newUniversity.distance}
                     onChange={(e) => setNewUniversity({...newUniversity, distance: e.target.value})}
+                    sx={{ minWidth: 200 }}
                   />
                   <Button variant="outlined" onClick={addUniversity}>
                     <Add />

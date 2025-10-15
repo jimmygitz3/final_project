@@ -7,6 +7,7 @@ const dotenv = require('dotenv');
 const authRoutes = require('./routes/auth');
 const listingRoutes = require('./routes/listings');
 const paymentRoutes = require('./routes/payments');
+const reviewRoutes = require('./routes/reviews');
 
 dotenv.config();
 
@@ -21,6 +22,7 @@ app.use('/uploads', express.static('uploads'));
 app.use('/api/auth', authRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/payments', paymentRoutes);
+app.use('/api/reviews', reviewRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/kejah', {

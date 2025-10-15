@@ -3,26 +3,32 @@ import {
   Container,
   Typography,
   Grid,
-  Card,
-  CardMedia,
-  CardContent,
-  CardActions,
-  Button,
-  TextField,
   Box,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
-  Chip
+  Paper,
+  Chip,
+  Skeleton,
+  Fade,
+  Card,
+  CardContent
 } from '@mui/material';
-import { LocationOn, School } from '@mui/icons-material';
-import { useNavigate } from 'react-router-dom';
+import { 
+  TrendingUp
+} from '@mui/icons-material';
+import PropertyCard from '../components/PropertyCard';
+import SearchFilters from '../components/SearchFilters';
+
 import axios from 'axios';
 
 const Home = () => {
-  const navigate = useNavigate();
   const [listings, setListings] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [favorites, setFavorites] = useState(new Set());
+  const [sortBy] = useState('newest');
+  const [stats, setStats] = useState({
+    totalProperties: 0,
+    totalUniversities: 50,
+    happyStudents: 0
+  });
   const [filters, setFilters] = useState({
     county: '',
     town: '',
@@ -32,11 +38,13 @@ const Home = () => {
     university: ''
   });
 
-  useEffect(() => {
-    fetchListings();
-  }, []);
+  const popularUniversities = [
+    'University of Nairobi', 'Kenyatta University', 'JKUAT', 
+    'Strathmore University', 'Moi University', 'Egerton University'
+  ];
 
-  const fetchListings = async () => {
+  const fetchListings = React.useCallback(async () => {
+    setLoading(true);
     try {
       const params = new URLSearchParams();
       Object.keys(filters).forEach(key => {
@@ -44,11 +52,50 @@ const Home = () => {
       });
       
       const response = await axios.get(`http://localhost:5000/api/listings?${params}`);
-      setListings(response.data);
+      let sortedListings = response.data;
+      
+      // Sort listings
+      switch (sortBy) {
+        case 'price-low':
+          sortedListings = sortedListings.sort((a, b) => a.price - b.price);
+          break;
+        case 'price-high':
+          sortedListings = sortedListings.sort((a, b) => b.price - a.price);
+          break;
+        case 'popular':
+          sortedListings = sortedListings.sort((a, b) => b.views - a.views);
+          break;
+        default:
+          sortedListings = sortedListings.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+      }
+      
+      setListings(sortedListings);
+      
+      // Update total properties count
+      setStats(prev => ({ ...prev, totalProperties: sortedListings.length }));
     } catch (error) {
       console.error('Error fetching listings:', error);
+    } finally {
+      setLoading(false);
     }
-  };
+  }, [filters, sortBy]);
+
+  const fetchStats = React.useCallback(async () => {
+    try {
+      const response = await axios.get('http://localhost:5000/api/reviews/stats');
+      setStats(prev => ({
+        ...prev,
+        happyStudents: response.data.happyStudents
+      }));
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    fetchListings();
+    fetchStats();
+  }, [fetchListings, fetchStats]);
 
   const handleFilterChange = (field, value) => {
     setFilters(prev => ({ ...prev, [field]: value }));
@@ -58,138 +105,172 @@ const Home = () => {
     fetchListings();
   };
 
+  const handleClearFilters = () => {
+    setFilters({
+      county: '',
+      town: '',
+      propertyType: '',
+      minPrice: '',
+      maxPrice: '',
+      university: ''
+    });
+  };
+
+  const toggleFavorite = (listingId) => {
+    const newFavorites = new Set(favorites);
+    if (newFavorites.has(listingId)) {
+      newFavorites.delete(listingId);
+    } else {
+      newFavorites.add(listingId);
+    }
+    setFavorites(newFavorites);
+    localStorage.setItem('favorites', JSON.stringify([...newFavorites]));
+  };
+
+  const shareProperty = (listing) => {
+    if (navigator.share) {
+      navigator.share({
+        title: listing.title,
+        text: `Check out this property: ${listing.title} - KES ${listing.price.toLocaleString()}/month`,
+        url: window.location.origin + `/listing/${listing._id}`
+      });
+    } else {
+      navigator.clipboard.writeText(window.location.origin + `/listing/${listing._id}`);
+      alert('Link copied to clipboard!');
+    }
+  };
+
+
+
+  // Load favorites from localStorage
+  useEffect(() => {
+    const savedFavorites = localStorage.getItem('favorites');
+    if (savedFavorites) {
+      setFavorites(new Set(JSON.parse(savedFavorites)));
+    }
+  }, []);
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
-      <Typography variant="h3" component="h1" gutterBottom align="center">
-        Find Your Perfect Student Accommodation
-      </Typography>
-      
-      <Typography variant="h6" color="text.secondary" align="center" sx={{ mb: 4 }}>
-        Discover affordable housing near universities across Kenya
-      </Typography>
+      {/* Hero Section */}
+      <Fade in timeout={1000}>
+        <Box sx={{ textAlign: 'center', mb: 6 }}>
+          <Typography variant="h2" component="h1" gutterBottom sx={{ 
+            fontWeight: 'bold',
+            background: 'linear-gradient(45deg, #2E7D32 30%, #FF6F00 90%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+          }}>
+            Find Your Perfect Student Home
+          </Typography>
+          
+          <Typography variant="h5" color="text.secondary" sx={{ mb: 3 }}>
+            🏠 Discover affordable housing near universities across Kenya 🎓
+          </Typography>
+
+          {/* Quick Stats */}
+          <Grid container spacing={2} sx={{ mb: 4, justifyContent: 'center' }}>
+            <Grid item>
+              <Paper sx={{ p: 2, textAlign: 'center', minWidth: 120 }}>
+                <Typography variant="h4" color="primary">
+                  {stats.totalProperties}
+                </Typography>
+                <Typography variant="body2">Properties</Typography>
+              </Paper>
+            </Grid>
+            <Grid item>
+              <Paper sx={{ p: 2, textAlign: 'center', minWidth: 120 }}>
+                <Typography variant="h4" color="primary">
+                  {stats.totalUniversities}+
+                </Typography>
+                <Typography variant="body2">Universities</Typography>
+              </Paper>
+            </Grid>
+            <Grid item>
+              <Paper sx={{ p: 2, textAlign: 'center', minWidth: 120 }}>
+                <Typography variant="h4" color="primary">
+                  {stats.happyStudents}
+                </Typography>
+                <Typography variant="body2">
+                  {stats.happyStudents === 1 ? 'Happy Student' : 'Happy Students'}
+                </Typography>
+              </Paper>
+            </Grid>
+          </Grid>
+
+          {/* Popular Universities */}
+          <Box sx={{ mb: 4 }}>
+            <Typography variant="h6" gutterBottom>Popular Universities</Typography>
+            <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, justifyContent: 'center' }}>
+              {popularUniversities.map((uni) => (
+                <Chip
+                  key={uni}
+                  label={uni}
+                  onClick={() => handleFilterChange('university', uni)}
+                  variant={filters.university === uni ? 'filled' : 'outlined'}
+                  color="primary"
+                  sx={{ cursor: 'pointer' }}
+                />
+              ))}
+            </Box>
+          </Box>
+        </Box>
+      </Fade>
 
       {/* Search Filters */}
-      <Box sx={{ mb: 4, p: 3, bgcolor: 'background.paper', borderRadius: 2 }}>
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={2}>
-            <TextField
-              fullWidth
-              label="County"
-              value={filters.county}
-              onChange={(e) => handleFilterChange('county', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <TextField
-              fullWidth
-              label="Town"
-              value={filters.town}
-              onChange={(e) => handleFilterChange('town', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <FormControl fullWidth>
-              <InputLabel>Property Type</InputLabel>
-              <Select
-                value={filters.propertyType}
-                onChange={(e) => handleFilterChange('propertyType', e.target.value)}
-              >
-                <MenuItem value="">All Types</MenuItem>
-                <MenuItem value="single-room">Single Room</MenuItem>
-                <MenuItem value="bedsitter">Bedsitter</MenuItem>
-                <MenuItem value="1-bedroom">1 Bedroom</MenuItem>
-                <MenuItem value="2-bedroom">2 Bedroom</MenuItem>
-                <MenuItem value="3-bedroom">3 Bedroom</MenuItem>
-                <MenuItem value="shared-room">Shared Room</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <TextField
-              fullWidth
-              label="Min Price (KES)"
-              type="number"
-              value={filters.minPrice}
-              onChange={(e) => handleFilterChange('minPrice', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <TextField
-              fullWidth
-              label="Max Price (KES)"
-              type="number"
-              value={filters.maxPrice}
-              onChange={(e) => handleFilterChange('maxPrice', e.target.value)}
-            />
-          </Grid>
-          <Grid item xs={12} sm={6} md={2}>
-            <Button
-              fullWidth
-              variant="contained"
-              onClick={handleSearch}
-              sx={{ height: '56px' }}
-            >
-              Search
-            </Button>
-          </Grid>
-        </Grid>
+      <SearchFilters
+        filters={filters}
+        onFilterChange={handleFilterChange}
+        onSearch={handleSearch}
+        onClearFilters={handleClearFilters}
+        showAdvanced={true}
+      />
+
+      {/* Results Header */}
+      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
+        <Typography variant="h5">
+          {loading ? 'Loading...' : `${listings.length} Properties Found`}
+        </Typography>
+        {listings.length > 0 && (
+          <Chip 
+            icon={<TrendingUp />} 
+            label="Updated Today" 
+            color="success" 
+            variant="outlined" 
+          />
+        )}
       </Box>
 
       {/* Listings Grid */}
       <Grid container spacing={3}>
-        {listings.map((listing) => (
-          <Grid item xs={12} sm={6} md={4} key={listing._id}>
-            <Card sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-              <CardMedia
-                component="img"
-                height="200"
-                image={listing.images[0] ? 
-                  `http://localhost:5000/uploads/${listing.images[0]}` : 
-                  '/placeholder-house.jpg'
-                }
-                alt={listing.title}
+        {loading ? (
+          // Loading skeletons
+          Array.from(new Array(6)).map((_, index) => (
+            <Grid item xs={12} sm={6} md={4} key={index}>
+              <Card sx={{ height: '100%' }}>
+                <Skeleton variant="rectangular" height={200} />
+                <CardContent>
+                  <Skeleton variant="text" height={32} />
+                  <Skeleton variant="text" height={20} />
+                  <Skeleton variant="text" height={20} width="60%" />
+                </CardContent>
+              </Card>
+            </Grid>
+          ))
+        ) : (
+          listings.map((listing, index) => (
+            <Grid item xs={12} sm={6} md={4} key={listing._id}>
+              <PropertyCard
+                listing={listing}
+                index={index}
+                favorites={favorites}
+                onToggleFavorite={toggleFavorite}
+                onShare={shareProperty}
               />
-              <CardContent sx={{ flexGrow: 1 }}>
-                <Typography gutterBottom variant="h6" component="h2">
-                  {listing.title}
-                </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>
-                  {listing.description.substring(0, 100)}...
-                </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
-                  <LocationOn fontSize="small" color="action" />
-                  <Typography variant="body2" sx={{ ml: 0.5 }}>
-                    {listing.location.town}, {listing.location.county}
-                  </Typography>
-                </Box>
-                <Typography variant="h6" color="primary" sx={{ mb: 1 }}>
-                  KES {listing.price.toLocaleString()}/month
-                </Typography>
-                <Chip 
-                  label={listing.propertyType.replace('-', ' ')} 
-                  size="small" 
-                  sx={{ mb: 1 }}
-                />
-                {listing.nearbyUniversities.length > 0 && (
-                  <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                    <School fontSize="small" color="action" />
-                    <Typography variant="body2" sx={{ ml: 0.5 }}>
-                      Near {listing.nearbyUniversities[0].name}
-                    </Typography>
-                  </Box>
-                )}
-              </CardContent>
-              <CardActions>
-                <Button 
-                  size="small" 
-                  onClick={() => navigate(`/listing/${listing._id}`)}
-                >
-                  View Details
-                </Button>
-              </CardActions>
-            </Card>
-          </Grid>
-        ))}
+            </Grid>
+          ))
+        )}
       </Grid>
 
       {listings.length === 0 && (
