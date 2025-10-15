@@ -21,6 +21,7 @@ const StatsCard = ({
   return (
     <Card sx={{ 
       height: '100%',
+      borderRadius: 3,
       background: `linear-gradient(135deg, ${color === 'primary' ? '#2E7D32' : color === 'secondary' ? '#FF6F00' : '#1976d2'} 0%, ${color === 'primary' ? '#4CAF50' : color === 'secondary' ? '#FFA726' : '#42A5F5'} 100%)`,
       color: 'white',
       position: 'relative',

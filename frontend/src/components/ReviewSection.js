@@ -126,7 +126,7 @@ const ReviewSection = ({ listingId }) => {
       </Typography>
 
       {/* Rating Summary */}
-      <Card sx={{ mb: 3 }}>
+      <Card sx={{ mb: 3, borderRadius: 3 }}>
         <CardContent>
           <Grid container spacing={3}>
             <Grid item xs={12} md={4}>
@@ -190,7 +190,7 @@ const ReviewSection = ({ listingId }) => {
           </Typography>
         ) : (
           reviews.map((review) => (
-            <Card key={review._id} sx={{ mb: 2 }}>
+            <Card key={review._id} sx={{ mb: 2, borderRadius: 2 }}>
               <CardContent>
                 <Box sx={{ display: 'flex', alignItems: 'flex-start', gap: 2 }}>
                   <Avatar sx={{ bgcolor: 'primary.main' }}>

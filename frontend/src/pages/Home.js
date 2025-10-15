@@ -172,27 +172,27 @@ const Home = () => {
           {/* Quick Stats */}
           <Grid container spacing={2} sx={{ mb: 4, justifyContent: 'center' }}>
             <Grid item>
-              <Paper sx={{ p: 2, textAlign: 'center', minWidth: 120 }}>
-                <Typography variant="h4" color="primary">
+              <Paper sx={{ p: 3, textAlign: 'center', minWidth: 140, borderRadius: 3 }}>
+                <Typography variant="h4" color="primary" sx={{ fontWeight: 600 }}>
                   {stats.totalProperties}
                 </Typography>
-                <Typography variant="body2">Properties</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>Properties</Typography>
               </Paper>
             </Grid>
             <Grid item>
-              <Paper sx={{ p: 2, textAlign: 'center', minWidth: 120 }}>
-                <Typography variant="h4" color="primary">
+              <Paper sx={{ p: 3, textAlign: 'center', minWidth: 140, borderRadius: 3 }}>
+                <Typography variant="h4" color="primary" sx={{ fontWeight: 600 }}>
                   {stats.totalUniversities}+
                 </Typography>
-                <Typography variant="body2">Universities</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>Universities</Typography>
               </Paper>
             </Grid>
             <Grid item>
-              <Paper sx={{ p: 2, textAlign: 'center', minWidth: 120 }}>
-                <Typography variant="h4" color="primary">
+              <Paper sx={{ p: 3, textAlign: 'center', minWidth: 140, borderRadius: 3 }}>
+                <Typography variant="h4" color="primary" sx={{ fontWeight: 600 }}>
                   {stats.happyStudents}
                 </Typography>
-                <Typography variant="body2">
+                <Typography variant="body2" sx={{ fontWeight: 500 }}>
                   {stats.happyStudents === 1 ? 'Happy Student' : 'Happy Students'}
                 </Typography>
               </Paper>

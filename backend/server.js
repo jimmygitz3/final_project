@@ -8,6 +8,7 @@ const authRoutes = require('./routes/auth');
 const listingRoutes = require('./routes/listings');
 const paymentRoutes = require('./routes/payments');
 const reviewRoutes = require('./routes/reviews');
+const activityRoutes = require('./routes/activity');
 
 dotenv.config();
 
@@ -23,6 +24,7 @@ app.use('/api/auth', authRoutes);
 app.use('/api/listings', listingRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/reviews', reviewRoutes);
+app.use('/api/activity', activityRoutes);
 
 // MongoDB connection
 mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/kejah', {

@@ -72,6 +72,7 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
           height: '100%', 
           display: 'flex', 
           flexDirection: 'column',
+          borderRadius: 3,
           transition: 'all 0.3s ease',
           '&:hover': {
             transform: 'translateY(-8px)',
@@ -87,7 +88,7 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
                 'https://via.placeholder.com/400x220?text=No+Image'
               }
               alt={listing.title}
-              sx={{ cursor: 'pointer' }}
+              sx={{ cursor: 'pointer', borderRadius: '16px 16px 0 0' }}
               onClick={() => navigate(`/listing/${listing._id}`)}
             />
             

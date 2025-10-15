@@ -42,6 +42,7 @@ const Dashboard = () => {
   const [listings, setListings] = useState([]);
   const [payments, setPayments] = useState([]);
   const [tabValue, setTabValue] = useState(0);
+  const [activities, setActivities] = useState([]);
   const [stats, setStats] = useState({
     totalViews: 0,
     totalEarnings: 0,
@@ -90,10 +91,14 @@ const Dashboard = () => {
       
       const paymentsResponse = await axios.get('http://localhost:5000/api/payments/history');
       setPayments(paymentsResponse.data);
+      
+      // Fetch activity feed
+      const activityResponse = await axios.get('http://localhost:5000/api/activity/feed');
+      setActivities(activityResponse.data);
     } catch (error) {
       console.error('Error fetching data:', error);
     }
-  }, [user, payments]);
+  }, [user]);
 
   useEffect(() => {
     if (user) {
@@ -128,7 +133,7 @@ const Dashboard = () => {
   return (
     <Container maxWidth="lg" sx={{ mt: 4, mb: 4 }}>
       {/* Welcome Header */}
-      <Paper sx={{ p: 4, mb: 4, background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)', color: 'white' }}>
+      <Paper sx={{ p: 4, mb: 4, borderRadius: 4, background: 'linear-gradient(135deg, #2E7D32 0%, #4CAF50 100%)', color: 'white' }}>
         <Box sx={{ display: 'flex', alignItems: 'center', gap: 3 }}>
           <Avatar sx={{ width: 80, height: 80, bgcolor: 'rgba(255,255,255,0.2)' }}>
             {user.name.charAt(0).toUpperCase()}
@@ -180,17 +185,15 @@ const Dashboard = () => {
                   subtitle={`${stats.activeListings} active`}
                   icon={<Home />}
                   color="primary"
-                  trend={12}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
                 <StatsCard
                   title="Total Views"
                   value={stats.totalViews.toLocaleString()}
-                  subtitle="This month"
+                  subtitle="All time"
                   icon={<Visibility />}
                   color="secondary"
-                  trend={8}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
@@ -200,7 +203,6 @@ const Dashboard = () => {
                   subtitle="Total earned"
                   icon={<AccountBalance />}
                   color="success"
-                  trend={15}
                 />
               </Grid>
               <Grid item xs={12} sm={6} md={3}>
@@ -314,22 +316,32 @@ const Dashboard = () => {
               Recent Activity
             </Typography>
             <List>
-              {payments.slice(0, 3).map((payment, index) => (
-                <ListItem key={payment._id}>
-                  <ListItemIcon>
-                    <Payment color="primary" />
-                  </ListItemIcon>
+              {activities.length > 0 ? (
+                activities.slice(0, 5).map((activity, index) => (
+                  <React.Fragment key={index}>
+                    <ListItem>
+                      <ListItemIcon>
+                        {activity.icon === 'home' && <Home color={activity.color} />}
+                        {activity.icon === 'payment' && <Payment color={activity.color} />}
+                        {activity.icon === 'visibility' && <Visibility color={activity.color} />}
+                        {activity.icon === 'star' && <Star color={activity.color} />}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={activity.title}
+                        secondary={`${activity.description} - ${new Date(activity.date).toLocaleDateString()}`}
+                      />
+                    </ListItem>
+                    {index < activities.slice(0, 5).length - 1 && <Divider />}
+                  </React.Fragment>
+                ))
+              ) : (
+                <ListItem>
                   <ListItemText
-                    primary={payment.description}
-                    secondary={`KES ${payment.amount} - ${new Date(payment.createdAt).toLocaleDateString()}`}
-                  />
-                  <Chip 
-                    label={payment.status} 
-                    color={payment.status === 'completed' ? 'success' : 'warning'}
-                    size="small"
+                    primary="No recent activity"
+                    secondary="Start by creating your first property listing or making a payment"
                   />
                 </ListItem>
-              ))}
+              )}
             </List>
           </Paper>
         </Box>
@@ -454,29 +466,37 @@ const Dashboard = () => {
           </Typography>
           <Paper sx={{ p: 3 }}>
             <List>
-              <ListItem>
-                <ListItemIcon><Home color="primary" /></ListItemIcon>
-                <ListItemText
-                  primary="New property listing created"
-                  secondary="2 hours ago"
-                />
-              </ListItem>
-              <Divider />
-              <ListItem>
-                <ListItemIcon><Payment color="success" /></ListItemIcon>
-                <ListItemText
-                  primary="Payment received - KES 500"
-                  secondary="1 day ago"
-                />
-              </ListItem>
-              <Divider />
-              <ListItem>
-                <ListItemIcon><Visibility color="info" /></ListItemIcon>
-                <ListItemText
-                  primary="Your property got 15 new views"
-                  secondary="2 days ago"
-                />
-              </ListItem>
+              {activities.length > 0 ? (
+                activities.map((activity, index) => (
+                  <React.Fragment key={index}>
+                    <ListItem>
+                      <ListItemIcon>
+                        {activity.icon === 'home' && <Home color={activity.color} />}
+                        {activity.icon === 'payment' && <Payment color={activity.color} />}
+                        {activity.icon === 'visibility' && <Visibility color={activity.color} />}
+                        {activity.icon === 'star' && <Star color={activity.color} />}
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={activity.title}
+                        secondary={`${activity.description} - ${new Date(activity.date).toLocaleDateString()}`}
+                      />
+                      <Typography variant="body2" color="text.secondary">
+                        {new Date(activity.date).toLocaleTimeString()}
+                      </Typography>
+                    </ListItem>
+                    {index < activities.length - 1 && <Divider />}
+                  </React.Fragment>
+                ))
+              ) : (
+                <Box sx={{ textAlign: 'center', py: 4 }}>
+                  <Typography variant="h6" color="text.secondary" gutterBottom>
+                    No activity yet
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Your activity will appear here as you use the platform
+                  </Typography>
+                </Box>
+              )}
             </List>
           </Paper>
         </Box>

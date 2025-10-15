@@ -45,7 +45,7 @@ const SearchFilters = ({
   };
 
   return (
-    <Paper elevation={3} sx={{ p: 3, borderRadius: 3, mb: 4 }}>
+    <Paper elevation={3} sx={{ p: 3, borderRadius: 4, mb: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
         <Typography variant="h6" sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
           <FilterList color="primary" />
