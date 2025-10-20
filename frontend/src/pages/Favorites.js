@@ -39,7 +39,7 @@ const Favorites = () => {
         
         // Fetch favorite listings
         if (favoriteIds.length > 0) {
-          const response = await axios.get('http://localhost:5000/api/listings');
+          const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/listings`);
           const allListings = response.data;
           const favListings = allListings.filter(listing => 
             favoriteIds.includes(listing._id)

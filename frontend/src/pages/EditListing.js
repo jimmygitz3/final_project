@@ -71,7 +71,7 @@ const EditListing = () => {
   useEffect(() => {
     const fetchListing = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/listings/${id}`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/listings/${id}`);
         const listing = response.data;
 
         // Check if user is the landlord
@@ -209,7 +209,7 @@ const EditListing = () => {
         formDataToSend.append('images', image);
       });
 
-      const response = await axios.put(`http://localhost:5000/api/listings/${id}`, formDataToSend, {
+      const response = await axios.put(`${process.env.REACT_APP_API_URL}/api/listings/${id}`, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -412,7 +412,7 @@ const EditListing = () => {
                           <CardMedia
                             component="img"
                             height="120"
-                            image={`http://localhost:5000/uploads/${image}`}
+                            image={`${process.env.REACT_APP_API_URL}/uploads/${image}`}
                             alt={`Property ${index + 1}`}
                             sx={{ 
                               cursor: 'pointer',
@@ -627,7 +627,7 @@ const EditListing = () => {
         </DialogTitle>
         <DialogContent>
           <img
-            src={`http://localhost:5000/uploads/${imagePreviewDialog.image}`}
+            src={`${process.env.REACT_APP_API_URL}/uploads/${imagePreviewDialog.image}`}
             alt="Preview"
             style={{ 
               width: '100%', 

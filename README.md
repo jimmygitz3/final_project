@@ -50,10 +50,7 @@ npm install
 ```
 MONGODB_URI=mongodb://localhost:27017/kejah
 JWT_SECRET=your_jwt_secret
-MPESA_CONSUMER_KEY=your_mpesa_consumer_key
-MPESA_CONSUMER_SECRET=your_mpesa_consumer_secret
-MPESA_SHORTCODE=your_shortcode
-MPESA_PASSKEY=your_passkey
+PAYMENT_MODE=demo
 ```
 
 3. Start the backend server:
@@ -97,8 +94,9 @@ npm run dev
 - `GET /api/listings/my/listings` - Get landlord's listings
 
 ### Payments
-- `POST /api/payments/mpesa/initiate` - Initiate M-Pesa payment
-- `POST /api/payments/mpesa/callback` - M-Pesa webhook
+- `POST /api/payments/demo/initiate` - Initiate demo payment
+- `POST /api/payments/demo/complete` - Complete demo payment
+- `GET /api/payments/demo/status/:transactionId` - Get payment status
 - `GET /api/payments/history` - Get payment history
 - `GET /api/payments/pricing` - Get pricing information
 

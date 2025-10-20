@@ -25,7 +25,7 @@ import { Add, Delete, LocationOn, School } from '@mui/icons-material';
 import { kenyanCounties, getTownsForCounty, kenyanUniversities } from '../data/kenyanLocations';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import MpesaPayment from '../components/MpesaPayment';
+import MockPayment from '../components/MockPayment';
 import axios from 'axios';
 
 const CreateListing = () => {
@@ -49,7 +49,7 @@ const CreateListing = () => {
   const [loading, setLoading] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [createdListing, setCreatedListing] = useState(null);
-  const [stripePayment, setStripePayment] = useState({
+  const [mockPayment, setMockPayment] = useState({
     open: false,
     amount: 500,
     description: '',
@@ -116,8 +116,8 @@ const CreateListing = () => {
       return;
     }
 
-    // Open Stripe payment dialog
-    setStripePayment({
+    // Open Mock payment dialog
+    setMockPayment({
       open: true,
       amount: 500,
       description: `Listing activation fee for ${createdListing.title}`,
@@ -127,13 +127,13 @@ const CreateListing = () => {
     setShowPayment(false); // Close the old payment dialog
   };
 
-  const handleStripePaymentSuccess = (paymentData) => {
+  const handleMockPaymentSuccess = (paymentData) => {
     alert('Payment successful! Your listing is now active.');
     navigate('/dashboard');
   };
 
-  const handleStripePaymentClose = () => {
-    setStripePayment({ 
+  const handleMockPaymentClose = () => {
+    setMockPayment({ 
       open: false, 
       amount: 500, 
       description: '', 
@@ -164,7 +164,7 @@ const CreateListing = () => {
         formDataToSend.append('images', image);
       });
 
-      const response = await axios.post('http://localhost:5000/api/listings', formDataToSend, {
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/listings`, formDataToSend, {
         headers: {
           'Content-Type': 'multipart/form-data'
         }
@@ -541,16 +541,16 @@ const CreateListing = () => {
         </DialogActions>
       </Dialog>
 
-      {/* M-Pesa Payment Dialog */}
-      <MpesaPayment
-        open={stripePayment.open}
-        onClose={handleStripePaymentClose}
-        amount={stripePayment.amount}
-        description={stripePayment.description}
+      {/* Mock Payment Dialog */}
+      <MockPayment
+        open={mockPayment.open}
+        onClose={handleMockPaymentClose}
+        amount={mockPayment.amount}
+        description={mockPayment.description}
         phoneNumber={user?.phone || ''}
-        paymentType={stripePayment.paymentType}
-        listingId={stripePayment.listingId}
-        onSuccess={handleStripePaymentSuccess}
+        paymentType={mockPayment.paymentType}
+        listingId={mockPayment.listingId}
+        onSuccess={handleMockPaymentSuccess}
       />
     </Container>
   );

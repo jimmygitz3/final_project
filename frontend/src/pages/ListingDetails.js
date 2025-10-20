@@ -20,7 +20,7 @@ import { LocationOn, School } from '@mui/icons-material';
 import ReviewSection from '../components/ReviewSection';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import MpesaPayment from '../components/MpesaPayment';
+import MockPayment from '../components/MockPayment';
 import axios from 'axios';
 
 const ListingDetails = () => {
@@ -32,7 +32,7 @@ const ListingDetails = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [contactUnlocked, setContactUnlocked] = useState(false);
-  const [mpesaPayment, setMpesaPayment] = useState({
+  const [mockPayment, setMockPayment] = useState({
     open: false,
     amount: 100,
     description: '',
@@ -42,13 +42,13 @@ const ListingDetails = () => {
 
   const fetchListing = React.useCallback(async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/listings/${id}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/listings/${id}`);
       setListing(response.data);
       
       // Check if user already has access to contact details
       if (user) {
         try {
-          const connectionResponse = await axios.get(`http://localhost:5000/api/connections/check/${id}`);
+          const connectionResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/connections/check/${id}`);
           if (connectionResponse.data.hasAccess) {
             setContactUnlocked(true);
           }
@@ -83,7 +83,7 @@ const ListingDetails = () => {
 
   const handlePayConnectionFee = () => {
     setContactDialog(false);
-    setMpesaPayment({
+    setMockPayment({
       open: true,
       amount: 100,
       description: `Connection fee for ${listing.title}`,
@@ -92,14 +92,14 @@ const ListingDetails = () => {
     });
   };
 
-  const handleMpesaPaymentSuccess = (paymentData) => {
+  const handleMockPaymentSuccess = (paymentData) => {
     setContactUnlocked(true);
-    setMpesaPayment({ open: false, amount: 100, description: '', paymentType: 'connection_fee', listingId: null });
+    setMockPayment({ open: false, amount: 100, description: '', paymentType: 'connection_fee', listingId: null });
     alert('Payment successful! Contact details are now unlocked.');
   };
 
-  const handleMpesaPaymentClose = () => {
-    setMpesaPayment({ open: false, amount: 100, description: '', paymentType: 'connection_fee', listingId: null });
+  const handleMockPaymentClose = () => {
+    setMockPayment({ open: false, amount: 100, description: '', paymentType: 'connection_fee', listingId: null });
   };
 
   if (loading) {
@@ -123,7 +123,7 @@ const ListingDetails = () => {
               <CardMedia
                 component="img"
                 height="400"
-                image={`http://localhost:5000/uploads/${listing.images[0]}`}
+                image={`${process.env.REACT_APP_API_URL}/uploads/${listing.images[0]}`}
                 alt={listing.title}
                 sx={{ 
                   objectFit: 'cover',
@@ -343,16 +343,16 @@ const ListingDetails = () => {
         </DialogActions>
       </Dialog>
 
-      {/* M-Pesa Payment Dialog */}
-      <MpesaPayment
-        open={mpesaPayment.open}
-        onClose={handleMpesaPaymentClose}
-        amount={mpesaPayment.amount}
-        description={mpesaPayment.description}
+      {/* Mock Payment Dialog */}
+      <MockPayment
+        open={mockPayment.open}
+        onClose={handleMockPaymentClose}
+        amount={mockPayment.amount}
+        description={mockPayment.description}
         phoneNumber={phoneNumber || user?.phone || ''}
-        paymentType={mpesaPayment.paymentType}
-        listingId={mpesaPayment.listingId}
-        onSuccess={handleMpesaPaymentSuccess}
+        paymentType={mockPayment.paymentType}
+        listingId={mockPayment.listingId}
+        onSuccess={handleMockPaymentSuccess}
       />
     </Container>
   );

@@ -33,8 +33,7 @@ import {
   LocationOn
 } from '@mui/icons-material';
 import StatsCard from '../components/StatsCard';
-import MpesaPayment from '../components/MpesaPayment';
-import MpesaStatus from '../components/MpesaStatus';
+import MockPayment from '../components/MockPayment';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -52,7 +51,7 @@ const Dashboard = () => {
     activeListings: 0,
     avgRating: 4.2
   });
-  const [stripePayment, setStripePayment] = useState({
+  const [mockPayment, setMockPayment] = useState({
     open: false,
     amount: 0,
     description: '',
@@ -63,7 +62,7 @@ const Dashboard = () => {
   const fetchData = React.useCallback(async () => {
     try {
       if (user?.userType === 'landlord') {
-        const listingsResponse = await axios.get('http://localhost:5000/api/listings/my/listings');
+        const listingsResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/listings/my/listings`);
         const listingsData = listingsResponse.data;
         setListings(listingsData);
         
@@ -77,7 +76,7 @@ const Dashboard = () => {
         
         try {
           for (const listing of listingsData) {
-            const reviewResponse = await axios.get(`http://localhost:5000/api/reviews/listing/${listing._id}/summary`);
+            const reviewResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/reviews/listing/${listing._id}/summary`);
             if (reviewResponse.data.totalReviews > 0) {
               totalRating += reviewResponse.data.averageRating * reviewResponse.data.totalReviews;
               totalReviews += reviewResponse.data.totalReviews;
@@ -99,11 +98,11 @@ const Dashboard = () => {
         });
       }
       
-      const paymentsResponse = await axios.get('http://localhost:5000/api/payments/history');
+      const paymentsResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/payments/history`);
       setPayments(paymentsResponse.data);
       
       // Fetch activity feed
-      const activityResponse = await axios.get('http://localhost:5000/api/activity/feed');
+      const activityResponse = await axios.get(`${process.env.REACT_APP_API_URL}/api/activity/feed`);
       setActivities(activityResponse.data);
     } catch (error) {
       console.error('Error fetching data:', error);
@@ -125,8 +124,8 @@ const Dashboard = () => {
       return;
     }
 
-    // Open Stripe payment dialog
-    setStripePayment({
+    // Open Mock payment dialog
+    setMockPayment({
       open: true,
       amount,
       description,
@@ -135,14 +134,14 @@ const Dashboard = () => {
     });
   };
 
-  const handleStripePaymentSuccess = (paymentData) => {
+  const handleMockPaymentSuccess = (paymentData) => {
     alert('Payment successful! Your listing is now active.');
-    setStripePayment({ open: false, amount: 0, description: '', paymentType: '', listingId: null });
+    setMockPayment({ open: false, amount: 0, description: '', paymentType: '', listingId: null });
     fetchData(); // Refresh data
   };
 
-  const handleStripePaymentClose = () => {
-    setStripePayment({ open: false, amount: 0, description: '', paymentType: '', listingId: null });
+  const handleMockPaymentClose = () => {
+    setMockPayment({ open: false, amount: 0, description: '', paymentType: '', listingId: null });
   };
 
   const handleMarkUnavailable = async (listingId, listingTitle) => {
@@ -157,7 +156,7 @@ const Dashboard = () => {
     if (!confirmed) return;
 
     try {
-      const response = await axios.patch(`http://localhost:5000/api/listings/${listingId}/mark-unavailable`);
+      const response = await axios.patch(`${process.env.REACT_APP_API_URL}/api/listings/${listingId}/mark-unavailable`);
       
       alert(`✅ ${response.data.message}`);
       fetchData(); // Refresh data
@@ -175,7 +174,7 @@ const Dashboard = () => {
     if (!confirmed) return;
 
     try {
-      const response = await axios.patch(`http://localhost:5000/api/listings/${listingId}/restore-availability`);
+      const response = await axios.patch(`${process.env.REACT_APP_API_URL}/api/listings/${listingId}/restore-availability`);
       
       alert(`✅ ${response.data.message}`);
       fetchData(); // Refresh data
@@ -212,8 +211,7 @@ const Dashboard = () => {
         </Box>
       </Paper>
       
-      {/* M-Pesa Status */}
-      <MpesaStatus />
+
 
       {user.userType === 'landlord' && (
         <Alert severity="info" sx={{ mb: 3 }} icon={<Notifications />}>
@@ -655,16 +653,16 @@ const Dashboard = () => {
       )}
 
 
-      {/* M-Pesa Payment Dialog */}
-      <MpesaPayment
-        open={stripePayment.open}
-        onClose={handleStripePaymentClose}
-        amount={stripePayment.amount}
-        description={stripePayment.description}
+      {/* Mock Payment Dialog */}
+      <MockPayment
+        open={mockPayment.open}
+        onClose={handleMockPaymentClose}
+        amount={mockPayment.amount}
+        description={mockPayment.description}
         phoneNumber={user?.phone || ''}
-        paymentType={stripePayment.paymentType}
-        listingId={stripePayment.listingId}
-        onSuccess={handleStripePaymentSuccess}
+        paymentType={mockPayment.paymentType}
+        listingId={mockPayment.listingId}
+        onSuccess={handleMockPaymentSuccess}
       />
     </Container>
   );

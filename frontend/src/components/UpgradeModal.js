@@ -30,8 +30,7 @@ import {
   Security,
   Speed
 } from '@mui/icons-material';
-import MpesaPayment from './MpesaPayment';
-import axios from 'axios';
+import MockPayment from './MockPayment';
 
 const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
   const [step, setStep] = useState(1); // 1: Plan Selection, 2: Payment Details, 3: Processing, 4: Success
@@ -42,7 +41,7 @@ const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const [stripePayment, setStripePayment] = useState({
+  const [mockPayment, setMockPayment] = useState({
     open: false,
     amount: 1000,
     description: '',
@@ -82,8 +81,8 @@ const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
   };
 
   const handlePayment = () => {
-    // Open Stripe payment dialog
-    setStripePayment({
+    // Open Mock payment dialog
+    setMockPayment({
       open: true,
       amount: paymentData.amount,
       description: `${plans[selectedPlan].name} - ${plans[selectedPlan].duration}`,
@@ -92,15 +91,15 @@ const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
     });
   };
 
-  const handleStripePaymentSuccess = (paymentData) => {
+  const handleMockPaymentSuccess = (paymentData) => {
     setStep(4);
     if (onUpgradeSuccess) {
       onUpgradeSuccess();
     }
   };
 
-  const handleStripePaymentClose = () => {
-    setStripePayment({ 
+  const handleMockPaymentClose = () => {
+    setMockPayment({ 
       open: false, 
       amount: 1000, 
       description: '', 
@@ -222,7 +221,7 @@ const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
 
       <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 2 }}>
         <Typography variant="body2" color="text.secondary">
-          💡 This is a demo payment. In production, you would receive an M-Pesa prompt on your phone.
+          💡 This is a demo payment system for testing purposes.
         </Typography>
       </Box>
     </Box>
@@ -235,11 +234,11 @@ const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
         Processing Payment...
       </Typography>
       <Typography variant="body2" color="text.secondary">
-        Please wait while we process your M-Pesa payment
+        Please wait while we process your demo payment
       </Typography>
       <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 2 }}>
         <Typography variant="body2">
-          📱 Check your phone for M-Pesa confirmation
+          💳 Processing demo payment...
         </Typography>
       </Box>
     </Box>
@@ -341,16 +340,15 @@ const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
         )}
       </DialogActions>
 
-      {/* M-Pesa Payment Dialog */}
-      <MpesaPayment
-        open={stripePayment.open}
-        onClose={handleStripePaymentClose}
-        amount={stripePayment.amount}
-        description={stripePayment.description}
-        phoneNumber={paymentData.phoneNumber}
-        paymentType={stripePayment.paymentType}
-        listingId={stripePayment.listingId}
-        onSuccess={handleStripePaymentSuccess}
+      {/* Mock Payment Dialog */}
+      <MockPayment
+        open={mockPayment.open}
+        onClose={handleMockPaymentClose}
+        amount={mockPayment.amount}
+        description={mockPayment.description}
+        paymentType={mockPayment.paymentType}
+        listingId={mockPayment.listingId}
+        onSuccess={handleMockPaymentSuccess}
       />
     </Dialog>
   );

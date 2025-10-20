@@ -51,7 +51,7 @@ const ReviewSection = ({ listingId }) => {
 
   const fetchReviews = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/reviews/listing/${listingId}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/reviews/listing/${listingId}`);
       setReviews(response.data);
     } catch (error) {
       console.error('Error fetching reviews:', error);
@@ -60,7 +60,7 @@ const ReviewSection = ({ listingId }) => {
 
   const fetchReviewSummary = async () => {
     try {
-      const response = await axios.get(`http://localhost:5000/api/reviews/listing/${listingId}/summary`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/reviews/listing/${listingId}/summary`);
       setReviewSummary(response.data);
     } catch (error) {
       console.error('Error fetching review summary:', error);
@@ -87,7 +87,7 @@ const ReviewSection = ({ listingId }) => {
     setError('');
 
     try {
-      await axios.post('http://localhost:5000/api/reviews', {
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/reviews`, {
         listingId,
         rating: newReview.rating,
         comment: newReview.comment.trim()
@@ -106,7 +106,7 @@ const ReviewSection = ({ listingId }) => {
 
   const handleHelpful = async (reviewId) => {
     try {
-      await axios.patch(`http://localhost:5000/api/reviews/${reviewId}/helpful`);
+      await axios.patch(`${process.env.REACT_APP_API_URL}/api/reviews/${reviewId}/helpful`);
       fetchReviews();
     } catch (error) {
       console.error('Error marking review as helpful:', error);

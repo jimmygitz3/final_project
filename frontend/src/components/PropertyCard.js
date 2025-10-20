@@ -55,7 +55,7 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
   useEffect(() => {
     const fetchReviewSummary = async () => {
       try {
-        const response = await axios.get(`http://localhost:5000/api/reviews/listing/${listing._id}/summary`);
+        const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/reviews/listing/${listing._id}/summary`);
         setReviewSummary(response.data);
       } catch (error) {
         console.error('Error fetching review summary:', error);
@@ -84,7 +84,7 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
               component="img"
               height="220"
               image={listing.images[0] ? 
-                `http://localhost:5000/uploads/${listing.images[0]}` : 
+                `${process.env.REACT_APP_API_URL}/uploads/${listing.images[0]}` : 
                 'https://via.placeholder.com/400x220?text=No+Image'
               }
               alt={listing.title}
@@ -321,7 +321,7 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
             {listing.images.map((image, index) => (
               <ImageListItem key={index}>
                 <img
-                  src={`http://localhost:5000/uploads/${image}`}
+                  src={`${process.env.REACT_APP_API_URL}/uploads/${image}`}
                   alt={`${listing.title} ${index + 1}`}
                   loading="lazy"
                   style={{ 

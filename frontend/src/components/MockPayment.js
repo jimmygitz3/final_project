@@ -47,8 +47,8 @@ const MockPayment = ({
     setActiveStep(1);
 
     try {
-      // Initiate payment
-      const response = await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
+      // Initiate demo payment
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/payments/demo/initiate`, {
         amount,
         phoneNumber,
         paymentType,
@@ -59,10 +59,9 @@ const MockPayment = ({
       // Simulate processing delay
       await new Promise(resolve => setTimeout(resolve, 2000));
 
-      // Mock successful payment callback
-      await axios.post('http://localhost:5000/api/payments/mpesa/callback', {
+      // Complete demo payment
+      await axios.post(`${process.env.REACT_APP_API_URL}/api/payments/demo/complete`, {
         transactionId: response.data.transactionId,
-        receiptNumber: `MP${Date.now()}`,
         status: 'completed'
       });
 
@@ -158,7 +157,7 @@ const MockPayment = ({
 
             <Box sx={{ bgcolor: 'grey.50', p: 2, borderRadius: 2 }}>
               <Typography variant="body2" color="text.secondary">
-                💡 This is a demo payment. In production, you would receive an M-Pesa prompt on your phone.
+                💡 This is a demo payment system for testing purposes.
               </Typography>
             </Box>
           </Box>
@@ -168,14 +167,14 @@ const MockPayment = ({
           <Box sx={{ textAlign: 'center', py: 4 }}>
             <CircularProgress size={60} sx={{ mb: 3 }} />
             <Typography variant="h6" gutterBottom>
-              Processing M-Pesa Payment...
+              Processing Demo Payment...
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Please complete the payment on your phone
+              Simulating payment processing
             </Typography>
             <Box sx={{ mt: 3, p: 2, bgcolor: 'info.light', borderRadius: 2 }}>
               <Typography variant="body2">
-                📱 Check your phone for M-Pesa prompt
+                💳 Processing demo transaction...
               </Typography>
             </Box>
           </Box>

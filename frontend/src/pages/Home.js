@@ -51,7 +51,7 @@ const Home = () => {
         if (filters[key]) params.append(key, filters[key]);
       });
       
-      const response = await axios.get(`http://localhost:5000/api/listings?${params}`);
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/listings?${params}`);
       let sortedListings = response.data;
       
       // Sort listings
@@ -82,7 +82,7 @@ const Home = () => {
 
   const fetchStats = React.useCallback(async () => {
     try {
-      const response = await axios.get('http://localhost:5000/api/reviews/stats');
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/reviews/stats`);
       setStats(prev => ({
         ...prev,
         happyStudents: response.data.happyStudents
