@@ -71,7 +71,7 @@ router.get('/feed', auth, async (req, res) => {
 
     // Get view statistics for user's listings (for landlords)
     const viewStats = await Listing.aggregate([
-      { $match: { landlord: mongoose.Types.ObjectId(userId) } },
+      { $match: { landlord: new mongoose.Types.ObjectId(userId) } },
       {
         $group: {
           _id: null,
@@ -127,7 +127,7 @@ router.get('/stats', auth, async (req, res) => {
     
     // Get total views in last 30 days (approximate)
     const totalViews = await Listing.aggregate([
-      { $match: { landlord: mongoose.Types.ObjectId(userId) } },
+      { $match: { landlord: new mongoose.Types.ObjectId(userId) } },
       { $group: { _id: null, totalViews: { $sum: '$views' } } }
     ]);
     

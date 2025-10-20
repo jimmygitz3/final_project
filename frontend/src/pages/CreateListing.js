@@ -25,6 +25,7 @@ import { Add, Delete, LocationOn, School } from '@mui/icons-material';
 import { kenyanCounties, getTownsForCounty, kenyanUniversities } from '../data/kenyanLocations';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import MpesaPayment from '../components/MpesaPayment';
 import axios from 'axios';
 
 const CreateListing = () => {
@@ -48,7 +49,13 @@ const CreateListing = () => {
   const [loading, setLoading] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [createdListing, setCreatedListing] = useState(null);
-  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [stripePayment, setStripePayment] = useState({
+    open: false,
+    amount: 500,
+    description: '',
+    paymentType: 'listing_fee',
+    listingId: null
+  });
 
   const handleChange = (e) => {
     setFormData({
@@ -58,7 +65,13 @@ const CreateListing = () => {
   };
 
   const handleImageChange = (e) => {
-    setImages([...e.target.files]);
+    const files = [...e.target.files];
+    if (files.length > 5) {
+      setError('Maximum 5 photos allowed per listing');
+      return;
+    }
+    setImages(files);
+    setError(''); // Clear any previous error
   };
 
   const addAmenity = () => {
@@ -95,7 +108,7 @@ const CreateListing = () => {
     });
   };
 
-  const handlePayment = async () => {
+  const handlePayment = () => {
     // Check if already paid
     if (createdListing?.paymentStatus === 'paid') {
       alert('This listing has already been paid for and is active!');
@@ -103,33 +116,30 @@ const CreateListing = () => {
       return;
     }
 
-    setPaymentLoading(true);
-    try {
-      const response = await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
-        amount: 500,
-        phoneNumber: user.phone,
-        paymentType: 'listing_fee',
-        listingId: createdListing._id,
-        description: `Listing activation fee for ${createdListing.title}`
-      });
+    // Open Stripe payment dialog
+    setStripePayment({
+      open: true,
+      amount: 500,
+      description: `Listing activation fee for ${createdListing.title}`,
+      paymentType: 'listing_fee',
+      listingId: createdListing._id
+    });
+    setShowPayment(false); // Close the old payment dialog
+  };
 
-      // Mock successful payment
-      setTimeout(async () => {
-        await axios.post('http://localhost:5000/api/payments/mpesa/callback', {
-          transactionId: response.data.transactionId || `TXN${Date.now()}`,
-          receiptNumber: `MP${Date.now()}`,
-          status: 'completed'
-        });
-        
-        alert('Payment successful! Your listing is now active.');
-        navigate('/dashboard');
-      }, 2000);
+  const handleStripePaymentSuccess = (paymentData) => {
+    alert('Payment successful! Your listing is now active.');
+    navigate('/dashboard');
+  };
 
-    } catch (error) {
-      setError('Payment failed: ' + (error.response?.data?.message || 'Unknown error'));
-    } finally {
-      setPaymentLoading(false);
-    }
+  const handleStripePaymentClose = () => {
+    setStripePayment({ 
+      open: false, 
+      amount: 500, 
+      description: '', 
+      paymentType: 'listing_fee', 
+      listingId: null 
+    });
   };
 
   const handleSubmit = async (e) => {
@@ -401,16 +411,44 @@ const CreateListing = () => {
               </Grid>
 
               <Grid item xs={12}>
-                <Typography variant="h6" gutterBottom>
-                  Images
+                <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 1 }}>
+                  <Typography variant="h6">
+                    Property Photos
+                  </Typography>
+                  <Chip 
+                    label={`${images.length}/5 photos`}
+                    color={images.length === 5 ? 'success' : 'default'}
+                    size="small"
+                  />
+                </Box>
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                  Upload up to 5 photos to showcase every room of your property
                 </Typography>
                 <input
                   type="file"
                   multiple
                   accept="image/*"
                   onChange={handleImageChange}
-                  style={{ width: '100%' }}
+                  style={{ width: '100%', marginBottom: '16px' }}
                 />
+                {images.length > 0 && (
+                  <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 1, mt: 2 }}>
+                    {Array.from(images).map((image, index) => (
+                      <Chip
+                        key={index}
+                        label={`Photo ${index + 1}: ${image.name.substring(0, 20)}...`}
+                        onDelete={() => {
+                          const newImages = Array.from(images);
+                          newImages.splice(index, 1);
+                          setImages(newImages);
+                        }}
+                        deleteIcon={<Delete />}
+                        variant="outlined"
+                        size="small"
+                      />
+                    ))}
+                  </Box>
+                )}
               </Grid>
             </Grid>
 
@@ -490,20 +528,30 @@ const CreateListing = () => {
               setShowPayment(false);
               navigate('/dashboard');
             }}
-            disabled={paymentLoading}
           >
             Skip Payment
           </Button>
           <Button 
             variant="contained" 
             onClick={handlePayment}
-            disabled={paymentLoading}
             sx={{ px: 4 }}
           >
-            {paymentLoading ? 'Processing...' : 'Pay KES 500'}
+            Pay KES 500
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* M-Pesa Payment Dialog */}
+      <MpesaPayment
+        open={stripePayment.open}
+        onClose={handleStripePaymentClose}
+        amount={stripePayment.amount}
+        description={stripePayment.description}
+        phoneNumber={user?.phone || ''}
+        paymentType={stripePayment.paymentType}
+        listingId={stripePayment.listingId}
+        onSuccess={handleStripePaymentSuccess}
+      />
     </Container>
   );
 };

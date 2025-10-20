@@ -20,6 +20,7 @@ import { LocationOn, School } from '@mui/icons-material';
 import ReviewSection from '../components/ReviewSection';
 import { useParams } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
+import MpesaPayment from '../components/MpesaPayment';
 import axios from 'axios';
 
 const ListingDetails = () => {
@@ -31,6 +32,13 @@ const ListingDetails = () => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [paymentLoading, setPaymentLoading] = useState(false);
   const [contactUnlocked, setContactUnlocked] = useState(false);
+  const [mpesaPayment, setMpesaPayment] = useState({
+    open: false,
+    amount: 100,
+    description: '',
+    paymentType: 'connection_fee',
+    listingId: null
+  });
 
   const fetchListing = React.useCallback(async () => {
     try {
@@ -73,37 +81,25 @@ const ListingDetails = () => {
     }
   };
 
-  const handlePayConnectionFee = async () => {
-    setPaymentLoading(true);
-    try {
-      const response = await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
-        amount: 100,
-        phoneNumber: phoneNumber || user.phone,
-        paymentType: 'connection_fee',
-        listingId: listing._id,
-        description: `Connection fee for ${listing.title}`
-      });
-      
-      // Mock successful payment
-      setTimeout(async () => {
-        await axios.post('http://localhost:5000/api/payments/mpesa/callback', {
-          transactionId: response.data.transactionId,
-          receiptNumber: `MP${Date.now()}`,
-          status: 'completed'
-        });
-        
-        setContactUnlocked(true);
-        setContactDialog(false); // Close the payment dialog
-        setPaymentLoading(false);
-        
-        // Show success message
-        alert('Payment successful! Contact details are now unlocked.');
-      }, 2000);
+  const handlePayConnectionFee = () => {
+    setContactDialog(false);
+    setMpesaPayment({
+      open: true,
+      amount: 100,
+      description: `Connection fee for ${listing.title}`,
+      paymentType: 'connection_fee',
+      listingId: listing._id
+    });
+  };
 
-    } catch (error) {
-      alert('Payment failed: ' + error.response?.data?.message);
-      setPaymentLoading(false);
-    }
+  const handleMpesaPaymentSuccess = (paymentData) => {
+    setContactUnlocked(true);
+    setMpesaPayment({ open: false, amount: 100, description: '', paymentType: 'connection_fee', listingId: null });
+    alert('Payment successful! Contact details are now unlocked.');
+  };
+
+  const handleMpesaPaymentClose = () => {
+    setMpesaPayment({ open: false, amount: 100, description: '', paymentType: 'connection_fee', listingId: null });
   };
 
   if (loading) {
@@ -129,6 +125,12 @@ const ListingDetails = () => {
                 height="400"
                 image={`http://localhost:5000/uploads/${listing.images[0]}`}
                 alt={listing.title}
+                sx={{ 
+                  objectFit: 'cover',
+                  width: '100%',
+                  height: '400px',
+                  borderRadius: 2
+                }}
               />
             </Card>
           )}
@@ -340,6 +342,18 @@ const ListingDetails = () => {
           </Button>
         </DialogActions>
       </Dialog>
+
+      {/* M-Pesa Payment Dialog */}
+      <MpesaPayment
+        open={mpesaPayment.open}
+        onClose={handleMpesaPaymentClose}
+        amount={mpesaPayment.amount}
+        description={mpesaPayment.description}
+        phoneNumber={phoneNumber || user?.phone || ''}
+        paymentType={mpesaPayment.paymentType}
+        listingId={mpesaPayment.listingId}
+        onSuccess={handleMpesaPaymentSuccess}
+      />
     </Container>
   );
 };

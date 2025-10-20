@@ -309,7 +309,7 @@ const Home = () => {
           Array.from(new Array(6)).map((_, index) => (
             <Grid item xs={12} sm={6} md={4} key={index}>
               <Card sx={{ height: '100%' }}>
-                <Skeleton variant="rectangular" height={200} />
+                <Skeleton variant="rectangular" height={220} />
                 <CardContent>
                   <Skeleton variant="text" height={32} />
                   <Skeleton variant="text" height={20} />

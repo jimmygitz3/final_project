@@ -90,7 +90,7 @@ router.get('/stats', async (req, res) => {
 router.get('/listing/:listingId/summary', async (req, res) => {
   try {
     const summary = await Review.aggregate([
-      { $match: { listing: mongoose.Types.ObjectId(req.params.listingId) } },
+      { $match: { listing: new mongoose.Types.ObjectId(req.params.listingId) } },
       {
         $group: {
           _id: null,

@@ -30,6 +30,7 @@ import {
   Security,
   Speed
 } from '@mui/icons-material';
+import MpesaPayment from './MpesaPayment';
 import axios from 'axios';
 
 const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
@@ -41,6 +42,13 @@ const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [stripePayment, setStripePayment] = useState({
+    open: false,
+    amount: 1000,
+    description: '',
+    paymentType: 'subscription',
+    listingId: null
+  });
 
   const plans = {
     premium: {
@@ -73,43 +81,32 @@ const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
     }
   };
 
-  const handlePayment = async () => {
-    setLoading(true);
-    setError('');
-    setStep(3);
+  const handlePayment = () => {
+    // Open Stripe payment dialog
+    setStripePayment({
+      open: true,
+      amount: paymentData.amount,
+      description: `${plans[selectedPlan].name} - ${plans[selectedPlan].duration}`,
+      paymentType: 'subscription',
+      listingId: null
+    });
+  };
 
-    try {
-      // Mock payment processing
-      await new Promise(resolve => setTimeout(resolve, 3000));
-
-      // Simulate M-Pesa payment
-      const response = await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
-        amount: paymentData.amount,
-        phoneNumber: paymentData.phoneNumber,
-        paymentType: 'subscription',
-        description: `${plans[selectedPlan].name} - ${plans[selectedPlan].duration}`
-      });
-
-      // Mock successful payment callback
-      setTimeout(async () => {
-        await axios.post('http://localhost:5000/api/payments/mpesa/callback', {
-          transactionId: response.data.transactionId,
-          receiptNumber: `MP${Date.now()}`,
-          status: 'completed'
-        });
-
-        setStep(4);
-        if (onUpgradeSuccess) {
-          onUpgradeSuccess();
-        }
-      }, 2000);
-
-    } catch (error) {
-      setError('Payment failed. Please try again.');
-      setStep(2);
-    } finally {
-      setLoading(false);
+  const handleStripePaymentSuccess = (paymentData) => {
+    setStep(4);
+    if (onUpgradeSuccess) {
+      onUpgradeSuccess();
     }
+  };
+
+  const handleStripePaymentClose = () => {
+    setStripePayment({ 
+      open: false, 
+      amount: 1000, 
+      description: '', 
+      paymentType: 'subscription', 
+      listingId: null 
+    });
   };
 
   const handleClose = () => {
@@ -343,6 +340,18 @@ const UpgradeModal = ({ open, onClose, user, onUpgradeSuccess }) => {
           </Button>
         )}
       </DialogActions>
+
+      {/* M-Pesa Payment Dialog */}
+      <MpesaPayment
+        open={stripePayment.open}
+        onClose={handleStripePaymentClose}
+        amount={stripePayment.amount}
+        description={stripePayment.description}
+        phoneNumber={paymentData.phoneNumber}
+        paymentType={stripePayment.paymentType}
+        listingId={stripePayment.listingId}
+        onSuccess={handleStripePaymentSuccess}
+      />
     </Dialog>
   );
 };

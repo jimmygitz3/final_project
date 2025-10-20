@@ -26,6 +26,15 @@ const paymentSchema = new mongoose.Schema({
   mpesaReceiptNumber: {
     type: String
   },
+  merchantRequestId: {
+    type: String
+  },
+  checkoutRequestId: {
+    type: String
+  },
+  transactionDate: {
+    type: Date
+  },
   phoneNumber: {
     type: String,
     required: true

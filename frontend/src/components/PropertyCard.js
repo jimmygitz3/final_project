@@ -88,7 +88,13 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
                 'https://via.placeholder.com/400x220?text=No+Image'
               }
               alt={listing.title}
-              sx={{ cursor: 'pointer', borderRadius: '16px 16px 0 0' }}
+              sx={{ 
+                objectFit: 'cover',
+                cursor: 'pointer', 
+                borderRadius: '16px 16px 0 0',
+                width: '100%',
+                height: '220px'
+              }}
               onClick={() => navigate(`/listing/${listing._id}`)}
             />
             
@@ -170,7 +176,13 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
             </Box>
           </Box>
 
-          <CardContent sx={{ flexGrow: 1, p: 2 }}>
+          <CardContent sx={{ 
+            flexGrow: 1, 
+            p: 2, 
+            display: 'flex', 
+            flexDirection: 'column',
+            minHeight: 280 // Ensure minimum content height
+          }}>
             <Typography 
               gutterBottom 
               variant="h6" 
@@ -178,7 +190,13 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
               sx={{ 
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                '&:hover': { color: 'primary.main' }
+                '&:hover': { color: 'primary.main' },
+                display: '-webkit-box',
+                WebkitLineClamp: 2,
+                WebkitBoxOrient: 'vertical',
+                overflow: 'hidden',
+                minHeight: '3.2em', // Ensure consistent title height
+                lineHeight: 1.6
               }}
               onClick={() => navigate(`/listing/${listing._id}`)}
             >
@@ -263,6 +281,9 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
                 </Typography>
               </Box>
             )}
+            
+            {/* Spacer to push actions to bottom */}
+            <Box sx={{ flexGrow: 1 }} />
           </CardContent>
           
           <CardActions sx={{ p: 2, pt: 0 }}>
@@ -303,7 +324,12 @@ const PropertyCard = ({ listing, index, favorites, onToggleFavorite, onShare }) 
                   src={`http://localhost:5000/uploads/${image}`}
                   alt={`${listing.title} ${index + 1}`}
                   loading="lazy"
-                  style={{ borderRadius: 8 }}
+                  style={{ 
+                    borderRadius: 8,
+                    width: '100%',
+                    height: '200px',
+                    objectFit: 'cover'
+                  }}
                 />
               </ImageListItem>
             ))}

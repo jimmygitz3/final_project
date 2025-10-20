@@ -36,9 +36,17 @@ const listingSchema = new mongoose.Schema({
   amenities: [{
     type: String
   }],
-  images: [{
-    type: String
-  }],
+  images: {
+    type: [{
+      type: String
+    }],
+    validate: {
+      validator: function(v) {
+        return v.length <= 5;
+      },
+      message: 'Maximum 5 images allowed per listing'
+    }
+  },
   landlord: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -63,6 +71,17 @@ const listingSchema = new mongoose.Schema({
   views: {
     type: Number,
     default: 0
+  },
+  availabilityStatus: {
+    type: String,
+    enum: ['available', 'not_available', 'pending_deletion'],
+    default: 'available'
+  },
+  markedUnavailableAt: {
+    type: Date
+  },
+  scheduledDeletionAt: {
+    type: Date
   },
   createdAt: {
     type: Date,

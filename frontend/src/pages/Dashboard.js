@@ -28,10 +28,13 @@ import {
   TrendingUp, 
   AccountBalance,
   Notifications,
+  Edit,
   Star,
   LocationOn
 } from '@mui/icons-material';
 import StatsCard from '../components/StatsCard';
+import MpesaPayment from '../components/MpesaPayment';
+import MpesaStatus from '../components/MpesaStatus';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
 import axios from 'axios';
@@ -48,6 +51,13 @@ const Dashboard = () => {
     totalEarnings: 0,
     activeListings: 0,
     avgRating: 4.2
+  });
+  const [stripePayment, setStripePayment] = useState({
+    open: false,
+    amount: 0,
+    description: '',
+    paymentType: '',
+    listingId: null
   });
 
   const fetchData = React.useCallback(async () => {
@@ -108,36 +118,69 @@ const Dashboard = () => {
 
 
 
-  const handlePayment = async (listingId, amount, description, currentPaymentStatus) => {
+  const handlePayment = (listingId, amount, description, currentPaymentStatus) => {
     // Check if already paid
     if (currentPaymentStatus === 'paid') {
       alert('This listing has already been paid for and is active!');
       return;
     }
 
-    try {
-      const response = await axios.post('http://localhost:5000/api/payments/mpesa/initiate', {
-        amount,
-        phoneNumber: user.phone,
-        paymentType: 'listing_fee',
-        listingId,
-        description
-      });
-      
-      // Mock successful payment
-      setTimeout(async () => {
-        await axios.post('http://localhost:5000/api/payments/mpesa/callback', {
-          transactionId: response.data.transactionId,
-          receiptNumber: `MP${Date.now()}`,
-          status: 'completed'
-        });
-        
-        alert('Payment successful! Your listing is now active.');
-        fetchData(); // Refresh data
-      }, 2000);
+    // Open Stripe payment dialog
+    setStripePayment({
+      open: true,
+      amount,
+      description,
+      paymentType: 'listing_fee',
+      listingId
+    });
+  };
 
+  const handleStripePaymentSuccess = (paymentData) => {
+    alert('Payment successful! Your listing is now active.');
+    setStripePayment({ open: false, amount: 0, description: '', paymentType: '', listingId: null });
+    fetchData(); // Refresh data
+  };
+
+  const handleStripePaymentClose = () => {
+    setStripePayment({ open: false, amount: 0, description: '', paymentType: '', listingId: null });
+  };
+
+  const handleMarkUnavailable = async (listingId, listingTitle) => {
+    const confirmed = window.confirm(
+      `Are you sure you want to mark "${listingTitle}" as unavailable?\n\n` +
+      `This will:\n` +
+      `• Hide the listing from tenants immediately\n` +
+      `• Automatically delete the listing in 24 hours\n` +
+      `• You can restore it within 24 hours if needed`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await axios.patch(`http://localhost:5000/api/listings/${listingId}/mark-unavailable`);
+      
+      alert(`✅ ${response.data.message}`);
+      fetchData(); // Refresh data
     } catch (error) {
-      alert('Payment failed: ' + error.response?.data?.message);
+      alert('Failed to mark listing as unavailable: ' + error.response?.data?.message);
+    }
+  };
+
+  const handleRestoreAvailability = async (listingId, listingTitle) => {
+    const confirmed = window.confirm(
+      `Restore availability for "${listingTitle}"?\n\n` +
+      `This will make the listing visible to tenants again.`
+    );
+
+    if (!confirmed) return;
+
+    try {
+      const response = await axios.patch(`http://localhost:5000/api/listings/${listingId}/restore-availability`);
+      
+      alert(`✅ ${response.data.message}`);
+      fetchData(); // Refresh data
+    } catch (error) {
+      alert('Failed to restore listing availability: ' + error.response?.data?.message);
     }
   };
 
@@ -169,6 +212,9 @@ const Dashboard = () => {
         </Box>
       </Paper>
       
+      {/* M-Pesa Status */}
+      <MpesaStatus />
+
       {user.userType === 'landlord' && (
         <Alert severity="info" sx={{ mb: 3 }} icon={<Notifications />}>
           Pay KES 500 per listing to activate and make it visible to tenants. Each listing is active for 30 days.
@@ -379,10 +425,16 @@ const Dashboard = () => {
               <Grid item xs={12} md={6} lg={4} key={listing._id}>
                 <Card sx={{ 
                   height: '100%',
+                  display: 'flex',
+                  flexDirection: 'column',
                   transition: 'transform 0.2s',
                   '&:hover': { transform: 'translateY(-4px)' }
                 }}>
-                  <CardContent>
+                  <CardContent sx={{ 
+                    flexGrow: 1, 
+                    display: 'flex', 
+                    flexDirection: 'column' 
+                  }}>
                     <Typography variant="h6" gutterBottom>
                       {listing.title}
                     </Typography>
@@ -398,7 +450,7 @@ const Dashboard = () => {
                       KES {listing.price.toLocaleString()}/month
                     </Typography>
                     
-                    <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
+                    <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap' }}>
                       <Chip 
                         label={listing.paymentStatus === 'paid' ? 'Paid' : 'Payment Pending'} 
                         color={listing.paymentStatus === 'paid' ? 'success' : 'warning'}
@@ -409,6 +461,21 @@ const Dashboard = () => {
                         color={listing.isActive ? 'success' : 'default'}
                         size="small"
                       />
+                      {listing.availabilityStatus && (
+                        <Chip 
+                          label={
+                            listing.availabilityStatus === 'available' ? 'Available' :
+                            listing.availabilityStatus === 'not_available' ? 'Not Available' :
+                            'Pending Deletion'
+                          }
+                          color={
+                            listing.availabilityStatus === 'available' ? 'success' :
+                            listing.availabilityStatus === 'not_available' ? 'error' :
+                            'warning'
+                          }
+                          size="small"
+                        />
+                      )}
                     </Box>
                     
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
@@ -431,15 +498,77 @@ const Dashboard = () => {
                         Pay KES 500 to Activate
                       </Button>
                     ) : (
-                      <Box sx={{ mt: 2, p: 2, bgcolor: 'success.light', borderRadius: 2 }}>
-                        <Typography variant="body2" color="success.dark" sx={{ textAlign: 'center', fontWeight: 600 }}>
-                          ✅ Listing Active - Payment Complete
-                        </Typography>
-                        <Typography variant="caption" color="success.dark" sx={{ textAlign: 'center', display: 'block' }}>
-                          Expires: {listing.paymentExpiry ? new Date(listing.paymentExpiry).toLocaleDateString() : 'N/A'}
-                        </Typography>
+                      <Box sx={{ mt: 2 }}>
+                        {listing.availabilityStatus === 'not_available' ? (
+                          <Box>
+                            <Box sx={{ p: 2, bgcolor: 'error.light', borderRadius: 2, mb: 2 }}>
+                              <Typography variant="body2" color="error.dark" sx={{ textAlign: 'center', fontWeight: 600 }}>
+                                🚫 Marked as Unavailable
+                              </Typography>
+                              <Typography variant="caption" color="error.dark" sx={{ textAlign: 'center', display: 'block' }}>
+                                Will be deleted: {listing.scheduledDeletionAt ? new Date(listing.scheduledDeletionAt).toLocaleString() : 'N/A'}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<Edit />}
+                                onClick={() => navigate(`/edit-listing/${listing._id}`)}
+                                size="small"
+                                sx={{ flex: 1 }}
+                              >
+                                Edit
+                              </Button>
+                            </Box>
+                            <Button
+                              variant="outlined"
+                              color="success"
+                              onClick={() => handleRestoreAvailability(listing._id, listing.title)}
+                              fullWidth
+                              size="small"
+                            >
+                              Restore Availability
+                            </Button>
+                          </Box>
+                        ) : (
+                          <Box>
+                            <Box sx={{ p: 2, bgcolor: 'success.light', borderRadius: 2, mb: 2 }}>
+                              <Typography variant="body2" color="success.dark" sx={{ textAlign: 'center', fontWeight: 600 }}>
+                                ✅ Listing Active - Payment Complete
+                              </Typography>
+                              <Typography variant="caption" color="success.dark" sx={{ textAlign: 'center', display: 'block' }}>
+                                Expires: {listing.paymentExpiry ? new Date(listing.paymentExpiry).toLocaleDateString() : 'N/A'}
+                              </Typography>
+                            </Box>
+                            <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                              <Button
+                                variant="outlined"
+                                color="primary"
+                                startIcon={<Edit />}
+                                onClick={() => navigate(`/edit-listing/${listing._id}`)}
+                                size="small"
+                                sx={{ flex: 1 }}
+                              >
+                                Edit
+                              </Button>
+                            </Box>
+                            <Button
+                              variant="outlined"
+                              color="error"
+                              onClick={() => handleMarkUnavailable(listing._id, listing.title)}
+                              fullWidth
+                              size="small"
+                            >
+                              Mark as Unavailable
+                            </Button>
+                          </Box>
+                        )}
                       </Box>
                     )}
+                    
+                    {/* Spacer to push content to consistent heights */}
+                    <Box sx={{ flexGrow: 1 }} />
                   </CardContent>
                 </Card>
               </Grid>
@@ -526,6 +655,17 @@ const Dashboard = () => {
       )}
 
 
+      {/* M-Pesa Payment Dialog */}
+      <MpesaPayment
+        open={stripePayment.open}
+        onClose={handleStripePaymentClose}
+        amount={stripePayment.amount}
+        description={stripePayment.description}
+        phoneNumber={user?.phone || ''}
+        paymentType={stripePayment.paymentType}
+        listingId={stripePayment.listingId}
+        onSuccess={handleStripePaymentSuccess}
+      />
     </Container>
   );
 };
