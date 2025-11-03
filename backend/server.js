@@ -17,14 +17,22 @@ const connectionRoutes = require('./routes/connections');
 // Import utilities
 const { startCleanupScheduler } = require('./utils/listingCleanup');
 
-dotenv.config();
-
 const app = express();
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: process.env.NODE_ENV === 'production' 
+    ? [process.env.FRONTEND_URL || 'https://your-frontend-app.vercel.app'] 
+    : ['http://localhost:3000', 'http://localhost:3001'],
+  credentials: true
+}));
 app.use(express.json());
 app.use('/uploads', express.static('uploads'));
+
+// Health check route
+app.get('/api/health', (req, res) => {
+  res.json({ status: 'OK', message: 'Kejah API is running' });
+});
 
 // Routes
 app.use('/api/auth', authRoutes);
@@ -35,21 +43,41 @@ app.use('/api/activity', activityRoutes);
 app.use('/api/connections', connectionRoutes);
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/kejah', {
-  useNewUrlParser: true,
-  useUnifiedTopology: true,
-});
+let isConnected = false;
 
-const db = mongoose.connection;
-db.on('error', console.error.bind(console, 'MongoDB connection error:'));
-db.once('open', () => {
-  console.log('Connected to MongoDB');
-  
-  // Start the listing cleanup scheduler
-  startCleanupScheduler();
-});
+const connectToDatabase = async () => {
+  if (isConnected) {
+    return;
+  }
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-  console.log(`🚀 Kejah Server with M-Pesa Integration (v2) running on port ${PORT}`);
-});
+  try {
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/kejah', {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    
+    isConnected = true;
+    console.log('Connected to MongoDB');
+    
+    // Start the listing cleanup scheduler only in non-serverless environment
+    if (process.env.NODE_ENV !== 'production') {
+      startCleanupScheduler();
+    }
+  } catch (error) {
+    console.error('MongoDB connection error:', error);
+  }
+};
+
+// Connect to database
+connectToDatabase();
+
+// For Vercel serverless functions
+if (process.env.NODE_ENV === 'production') {
+  module.exports = app;
+} else {
+  // For local development
+  const PORT = process.env.PORT || 5000;
+  app.listen(PORT, () => {
+    console.log(`🚀 Kejah Server running on port ${PORT}`);
+  });
+}

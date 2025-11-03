@@ -28,6 +28,9 @@ A MERN stack application for university students to find affordable housing acro
 
 - **Frontend**: React.js with Material-UI
 - **Backend**: Node.js with Express.js
+- **Database**: MongoDB
+- **Deployment**: Vercel
+- **Payments**: Demo Payment System
 - **Database**: MongoDB with Mongoose
 - **Authentication**: JWT tokens
 - **Payments**: M-Pesa API integration
@@ -154,6 +157,30 @@ kejah/
 ## License
 
 This project is licensed under the MIT License.
+
+## Deployment
+
+### Quick Deployment to Vercel
+
+1. **Prerequisites:**
+   - Vercel account
+   - MongoDB Atlas database
+   - GitHub repository
+
+2. **Deploy Backend:**
+   ```bash
+   # Create new Vercel project with root directory: backend
+   # Add environment variables: MONGODB_URI, JWT_SECRET, NODE_ENV=production
+   ```
+
+3. **Deploy Frontend:**
+   ```bash
+   # Create new Vercel project with root directory: frontend  
+   # Add environment variable: REACT_APP_API_URL=your_backend_url
+   ```
+
+4. **Detailed Instructions:**
+   See [DEPLOYMENT_GUIDE.md](./DEPLOYMENT_GUIDE.md) for complete deployment instructions.
 
 ## Support
 
