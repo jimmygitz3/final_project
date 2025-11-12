@@ -1,9 +1,9 @@
 const express = require('express');
 const mongoose = require('mongoose');
-const Listing = require('../models/Listing');
-const Payment = require('../models/Payment');
-const Review = require('../models/Review');
-const auth = require('../middleware/auth');
+const Listing = require('./Listing.model');
+const Payment = require('./Payment.model');
+const Review = require('./Review.model');
+const auth = require('./auth.middleware');
 
 const router = express.Router();
 

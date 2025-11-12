@@ -1,8 +1,8 @@
 const express = require('express');
-const Payment = require('../models/Payment');
-const Listing = require('../models/Listing');
-const User = require('../models/User');
-const auth = require('../middleware/auth');
+const Payment = require('./Payment.model');
+const Listing = require('./Listing.model');
+const User = require('./User.model');
+const auth = require('./auth.middleware');
 
 const router = express.Router();
 
@@ -52,7 +52,7 @@ router.post('/demo/initiate', auth, async (req, res) => {
 
     // Check for duplicate connection fee payments
     if (listingId && paymentType === 'connection_fee') {
-      const Connection = require('../models/Connection');
+      const Connection = require('./Connection.model');
       const existingConnection = await Connection.findOne({
         tenant: req.userId,
         listing: listingId
@@ -138,8 +138,6 @@ router.post('/demo/complete', auth, async (req, res) => {
   }
 });
 
-
-
 // Helper function to handle payment completion logic
 async function handlePaymentCompletion(payment) {
   if (payment.paymentType === 'listing_fee') {
@@ -150,7 +148,7 @@ async function handlePaymentCompletion(payment) {
     });
   } else if (payment.paymentType === 'connection_fee') {
     // Create connection record for tenant
-    const Connection = require('../models/Connection');
+    const Connection = require('./Connection.model');
     const listing = await Listing.findById(payment.listing);
     
     const connection = new Connection({

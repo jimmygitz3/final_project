@@ -1,8 +1,8 @@
 const express = require('express');
-const Connection = require('../models/Connection');
-const Payment = require('../models/Payment');
-const Listing = require('../models/Listing');
-const auth = require('../middleware/auth');
+const Connection = require('./Connection.model');
+const Payment = require('./Payment.model');
+const Listing = require('./Listing.model');
+const auth = require('./auth.middleware');
 
 const router = express.Router();
 

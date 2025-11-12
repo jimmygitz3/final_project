@@ -7,15 +7,15 @@ const dotenv = require('dotenv');
 dotenv.config();
 
 // Import routes
-const authRoutes = require('./routes/auth');
-const listingRoutes = require('./routes/listings');
-const paymentRoutes = require('./routes/payments');
-const reviewRoutes = require('./routes/reviews');
-const activityRoutes = require('./routes/activity');
-const connectionRoutes = require('./routes/connections');
+const authRoutes = require('./auth.route');
+const listingRoutes = require('./listings.route');
+const paymentRoutes = require('./payments.route');
+const reviewRoutes = require('./reviews.route');
+const activityRoutes = require('./activity.route');
+const connectionRoutes = require('./connections.route');
 
 // Import utilities
-const { startCleanupScheduler } = require('./utils/listingCleanup');
+const { startCleanupScheduler } = require('./listingCleanup.util');
 
 const app = express();
 

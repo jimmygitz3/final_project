@@ -1,4 +1,4 @@
-const Listing = require('../models/Listing');
+const Listing = require('./Listing.model');
 
 // Function to delete listings that have been marked unavailable for 24+ hours
 const cleanupUnavailableListings = async () => {

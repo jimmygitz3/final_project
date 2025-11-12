@@ -107,26 +107,23 @@ npm run dev
 
 ```
 kejah/
-├── backend/
-│   ├── models/
-│   │   ├── User.js
-│   │   ├── Listing.js
-│   │   └── Payment.js
-│   ├── routes/
-│   │   ├── auth.js
-│   │   ├── listings.js
-│   │   └── payments.js
-│   ├── middleware/
-│   │   └── auth.js
-│   └── server.js
+├── backend/                    # Flat structure for easy deployment
+│   ├── *.model.js             # Database models (User, Listing, Payment, etc.)
+│   ├── *.route.js             # API routes (auth, listings, payments, etc.)
+│   ├── *.middleware.js        # Middleware functions (auth)
+│   ├── *.util.js              # Utility functions (listingCleanup)
+│   ├── server.js              # Express server configuration
+│   ├── index.js               # Entry point for Vercel
+│   └── vercel.json            # Vercel deployment config
 ├── frontend/
 │   ├── src/
-│   │   ├── components/
-│   │   ├── contexts/
-│   │   ├── pages/
-│   │   └── App.js
+│   │   ├── components/        # Reusable React components
+│   │   ├── contexts/          # React context providers
+│   │   ├── pages/             # Page components
+│   │   ├── data/              # Static data files
+│   │   └── App.js             # Main app component
 │   └── public/
-├── uploads/ (created automatically)
+├── uploads/                   # Property images (created automatically)
 ├── package.json
 └── README.md
 ```

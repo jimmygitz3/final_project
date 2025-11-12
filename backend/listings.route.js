@@ -1,7 +1,7 @@
 const express = require('express');
-const Listing = require('../models/Listing');
-const User = require('../models/User');
-const auth = require('../middleware/auth');
+const Listing = require('./Listing.model');
+const User = require('./User.model');
+const auth = require('./auth.middleware');
 const multer = require('multer');
 const path = require('path');
 
